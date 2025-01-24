@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Éditeur Vidéo Interactif</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/leader-line-new"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+</head>
+<body>
+    <div id="app">
+        <div class="toolbar">
+            <input type="file" id="fileInput" accept="video/*" multiple style="display: none;">
+            <button onclick="document.getElementById('fileInput').click()">📁 Ajouter des vidéos</button>
+        </div>
+
+        <div id="workspace">
+            <div id="dropZone" class="drop-zone">
+                <div class="drop-message">
+                    <div class="drop-icon">📥</div>
+                    <div class="drop-text">Glissez vos vidéos ici</div>
+                    <div class="drop-subtext">ou cliquez pour en ajouter</div>
+                </div>
+            </div>
+
+            <div id="graphContainer"></div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Éditeur Vidéo Interactif</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/leader-line-new/leader-line.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+</head>
+<body>
+    <div id="app">
+        <header>
+            <div class="project-info">
+                <input type="text" id="projectName" placeholder="Nom du projet">
+                <span id="projectDisplay"></span>
+            </div>
+            <div class="toolbar">
+                <div class="file-controls">
+                    <input type="file" id="fileInput" accept="video/*" multiple style="display: none">
+                    <button id="addVideoBtn" onclick="document.getElementById('fileInput').click()">
+                        📁 Ajouter des vidéos
+                    </button>
+                    <div class="project-controls">
+                        <button id="saveBtn">💾 Sauvegarder le projet (.pov)</button>
+                        <input type="file" id="loadInput" accept=".pov" style="display: none">
+                        <button id="loadBtn" onclick="document.getElementById('loadInput').click()">
+                            📂 Charger un projet
+                        </button>
+                    </div>
+                </div>
+                <div class="view-controls">
+                    <button id="gridViewBtn">📊 Vue Grille</button>
+                    <button id="flowViewBtn" class="active">🔀 Vue Flux</button>
+                </div>
+            </div>
+        </header>
+        
+        <main id="graph-container" class="flow-view">
+            <!-- Zone de drop -->
+            <div id="dropZone" class="drop-zone">
+                <div class="drop-message">
+                    <div class="drop-icon">📥</div>
+                    <div class="drop-text">Déposez vos vidéos ici</div>
+                    <div class="drop-subtext">ou cliquez pour en ajouter</div>
+                </div>
+            </div>
+
+            <!-- Grille des vidéos -->
+            <div id="videoGrid" class="video-grid"></div>
+        </main>
+        
+        <!-- Lecteur vidéo -->
+        <div class="overlay">
+            <video id="videoPlayer" controls></video>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

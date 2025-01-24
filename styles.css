@@ -1,0 +1,347 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+    background-color: #f5f5f5;
+}
+
+#app {
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.toolbar {
+    background: white;
+    padding: 1rem;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.toolbar button {
+    background: #4CAF50;
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.toolbar button:hover {
+    background: #45a049;
+}
+
+#workspace {
+    flex: 1;
+    position: relative;
+    overflow: hidden;
+}
+
+.drop-zone {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 3px dashed #ccc;
+    margin: 2rem;
+    border-radius: 8px;
+    background: white;
+    transition: all 0.3s ease;
+}
+
+.drop-zone.dragover {
+    border-color: #4CAF50;
+    background: #e8f5e9;
+}
+
+.drop-message {
+    text-align: center;
+    color: #666;
+}
+
+.drop-icon {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+}
+
+.drop-text {
+    font-size: 1.2rem;
+    margin-bottom: 0.5rem;
+}
+
+.drop-subtext {
+    font-size: 0.9rem;
+    color: #999;
+}
+
+#graphContainer {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: none;
+}
+
+/* Nœuds vidéo */
+.scene-node {
+    position: absolute;
+    width: 250px;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    cursor: move;
+}
+
+.scene-node.dragging {
+    opacity: 0.8;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+}
+
+.scene-node.playing {
+    box-shadow: 0 0 0 2px #4CAF50;
+}
+
+.video-container {
+    position: relative;
+    width: 100%;
+    padding-top: 56.25%; /* 16:9 */
+    background: #000;
+    border-radius: 8px 8px 0 0;
+    overflow: hidden;
+}
+
+.preview-video {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+.video-controls {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 0.5rem;
+    background: rgba(0,0,0,0.5);
+    display: flex;
+    gap: 0.5rem;
+    opacity: 0;
+    transition: opacity 0.3s;
+    align-items: center;
+}
+
+.video-container:hover .video-controls {
+    opacity: 1;
+}
+
+.video-controls button {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 1.2rem;
+    padding: 0.25rem;
+    border-radius: 4px;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+}
+
+.video-controls button:hover {
+    background: rgba(255,255,255,0.2);
+}
+
+.fullscreen-btn {
+    margin-left: auto;
+}
+
+.title {
+    padding: 0.5rem;
+    font-size: 0.9rem;
+    border-bottom: 1px solid #eee;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.connection-point {
+    position: absolute;
+    width: 12px;
+    height: 12px;
+    background: #4CAF50;
+    border: 2px solid white;
+    border-radius: 50%;
+    cursor: pointer;
+    z-index: 1;
+}
+
+.connection-point:hover {
+    transform: scale(1.2);
+}
+
+.connection-point.active {
+    background: #FFC107;
+}
+
+.connection-point.top {
+    top: -6px;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.connection-point.bottom {
+    bottom: -6px;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.delete-btn {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 1.2rem;
+    opacity: 0;
+    transition: opacity 0.3s;
+}
+
+.scene-node:hover .delete-btn {
+    opacity: 1;
+}
+
+/* Style pour la vidéo en plein écran */
+video:fullscreen {
+    background: black;
+    width: 100vw;
+    height: 100vh;
+}
+
+/* Modal */
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    backdrop-filter: blur(3px);
+}
+
+.modal-content {
+    background-color: white;
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    width: 400px;
+    max-width: 90vw;
+}
+
+.modal-content h2 {
+    margin: 0 0 25px 0;
+    color: #333;
+    font-size: 1.4em;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.modal-field {
+    margin-bottom: 20px;
+}
+
+.modal-field label {
+    display: block;
+    margin-bottom: 8px;
+    color: #555;
+    font-size: 0.9em;
+    font-weight: 500;
+}
+
+.modal-content input {
+    width: 100%;
+    padding: 10px;
+    border: 2px solid #e0e0e0;
+    border-radius: 6px;
+    font-size: 1em;
+    transition: border-color 0.2s;
+}
+
+.modal-content input:focus {
+    border-color: #4CAF50;
+    outline: none;
+}
+
+.video-sequence {
+    background-color: #f8f8f8;
+    border: 1px solid #e0e0e0;
+    border-radius: 6px;
+    padding: 12px;
+    max-height: 150px;
+    overflow-y: auto;
+    font-family: monospace;
+    white-space: pre;
+    font-size: 0.9em;
+    line-height: 1.4;
+}
+
+.modal-buttons {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    margin-top: 25px;
+}
+
+.modal-buttons button {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.95em;
+    font-weight: 500;
+    transition: all 0.2s;
+}
+
+#cancelSave {
+    background-color: #f0f0f0;
+    color: #333;
+}
+
+#confirmSave {
+    background-color: #4CAF50;
+    color: white;
+}
+
+#cancelSave:hover {
+    background-color: #e0e0e0;
+    transform: translateY(-1px);
+}
+
+#confirmSave:hover {
+    background-color: #45a049;
+    transform: translateY(-1px);
+}
+
+#cancelSave:active,
+#confirmSave:active {
+    transform: translateY(0);
+}
