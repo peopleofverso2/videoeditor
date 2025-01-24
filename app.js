@@ -4,11 +4,75 @@ document.addEventListener('DOMContentLoaded', function() {
     let activePoint = null;
     let currentNode = null;
     let isPlaying = false;
+    let currentZoom = 1;
 
     // Éléments DOM
     const graphContainer = document.getElementById('graphContainer');
     const fileInput = document.getElementById('fileInput');
     const dropZone = document.getElementById('dropZone');
+    const toolbar = document.querySelector('.toolbar');
+
+    // Initialiser la toolbar
+    initToolbar();
+
+    // Créer les conteneurs de zoom une seule fois au démarrage
+    const graphContent = document.createElement('div');
+    graphContent.className = 'graph-content';
+    const zoomContainer = document.createElement('div');
+    zoomContainer.className = 'zoom-container';
+    graphContent.appendChild(zoomContainer);
+    graphContainer.appendChild(graphContent);
+
+    function initToolbar() {
+        // Bouton de sauvegarde
+        const saveBtn = document.createElement('button');
+        saveBtn.textContent = '💾 Sauvegarder';
+        saveBtn.onclick = saveProject;
+        toolbar.appendChild(saveBtn);
+
+        // Bouton de chargement
+        const loadBtn = document.createElement('button');
+        loadBtn.textContent = '📂 Charger';
+        loadBtn.onclick = () => loadInput.click();
+        toolbar.appendChild(loadBtn);
+
+        // Input de chargement caché
+        const loadInput = document.createElement('input');
+        loadInput.type = 'file';
+        loadInput.accept = '.pov';
+        loadInput.style.display = 'none';
+        loadInput.onchange = loadProject;
+        toolbar.appendChild(loadInput);
+
+        // Contrôles de zoom
+        const zoomControls = document.createElement('div');
+        zoomControls.className = 'zoom-controls';
+        zoomControls.innerHTML = `
+            <button id="zoomOut">➖</button>
+            <span class="zoom-level">100%</span>
+            <button id="zoomIn">➕</button>
+            <button id="resetZoom">🔄</button>
+        `;
+        toolbar.appendChild(zoomControls);
+
+        // Initialiser les contrôles de zoom
+        const zoomLevel = zoomControls.querySelector('.zoom-level');
+        
+        zoomControls.querySelector('#zoomIn').onclick = () => {
+            currentZoom = Math.min(currentZoom + 0.1, 2);
+            updateZoom();
+        };
+        
+        zoomControls.querySelector('#zoomOut').onclick = () => {
+            currentZoom = Math.max(currentZoom - 0.1, 0.5);
+            updateZoom();
+        };
+        
+        zoomControls.querySelector('#resetZoom').onclick = () => {
+            currentZoom = 1;
+            updateZoom();
+        };
+    }
 
     // Import de fichiers
     fileInput.addEventListener('change', handleFileSelect);
@@ -36,26 +100,67 @@ document.addEventListener('DOMContentLoaded', function() {
         e.preventDefault();
         dropZone.classList.remove('dragover');
         const files = Array.from(e.dataTransfer.files).filter(file => file.type.startsWith('video/'));
+        console.log('Fichiers vidéo détectés:', files.length);
         handleFiles(files);
     }
 
-    function handleFiles(files) {
+    async function handleFiles(files) {
         if (files.length === 0) return;
+        console.log('Traitement de', files.length, 'fichiers');
 
         // Afficher le conteneur de graphe et masquer la zone de drop
         graphContainer.style.display = 'block';
         dropZone.style.display = 'none';
 
-        // Créer les nœuds
-        files.forEach((file, index) => {
-            createSceneNode(file, index * 300 + 100, 100);
-        });
+        // Calculer la disposition en grille
+        const margin = 50;
+        const nodeWidth = 300;
+        const nodeHeight = 200;
+        const containerWidth = graphContainer.clientWidth - nodeWidth;
+        const nodesPerRow = Math.floor(containerWidth / (nodeWidth + margin)) || 1;
+
+        // Créer les nœuds en grille de manière asynchrone
+        for (let i = 0; i < files.length; i++) {
+            const file = files[i];
+            const row = Math.floor(i / nodesPerRow);
+            const col = i % nodesPerRow;
+            const x = col * (nodeWidth + margin) + margin;
+            const y = row * (nodeHeight + margin) + margin;
+            
+            console.log(`Création du nœud ${i + 1}/${files.length} à (${x}, ${y})`);
+            
+            // Créer le nœud et attendre qu'il soit prêt
+            await new Promise((resolve) => {
+                const node = createSceneNode(file, x, y);
+                const video = node.querySelector('video');
+                
+                // Attendre que la vidéo soit chargée ou en erreur
+                video.onloadedmetadata = () => {
+                    console.log('Vidéo chargée:', file.name);
+                    resolve();
+                };
+                video.onerror = () => {
+                    console.error('Erreur de chargement vidéo:', file.name);
+                    resolve();
+                };
+                
+                // Timeout de sécurité
+                setTimeout(resolve, 2000);
+            });
+            
+            // Petite pause entre chaque création
+            await new Promise(resolve => setTimeout(resolve, 100));
+        }
+
+        console.log('Nœuds créés:', document.querySelectorAll('.scene-node').length);
+        updateGraphSize();
     }
 
     function createSceneNode(videoFile, x, y) {
+        console.log('Création du nœud pour:', videoFile.name);
         const node = document.createElement('div');
         node.className = 'scene-node';
-        node.id = 'scene_' + Date.now();
+        node.id = 'scene_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
         node.style.left = x + 'px';
         node.style.top = y + 'px';
 
@@ -90,8 +195,30 @@ document.addEventListener('DOMContentLoaded', function() {
         // Drag and drop
         makeDraggable(node);
 
-        // Ajouter au conteneur
-        graphContainer.appendChild(node);
+        // Observer les changements de taille
+        const resizeObserver = new ResizeObserver(entries => {
+            for (const entry of entries) {
+                const node = entry.target;
+                // Mettre à jour les lignes connectées à ce nœud
+                connections.forEach(conn => {
+                    if (conn.source === node.id || conn.target === node.id) {
+                        conn.line.position();
+                    }
+                });
+            }
+            // Mettre à jour la taille du conteneur
+            updateGraphSize();
+        });
+        resizeObserver.observe(node);
+
+        // Ajouter au conteneur de zoom
+        const zoomContainer = graphContainer.querySelector('.zoom-container');
+        zoomContainer.appendChild(node);
+        
+        // Mettre à jour la taille du conteneur
+        updateGraphSize();
+        
+        console.log('Nœud ajouté:', node.id);
         return node;
     }
 
@@ -240,49 +367,70 @@ document.addEventListener('DOMContentLoaded', function() {
         let initialX;
         let initialY;
 
-        element.addEventListener('mousedown', e => {
-            if (e.target.closest('button') || e.target.closest('.connection-point')) {
+        element.addEventListener('mousedown', dragStart);
+        document.addEventListener('mousemove', drag);
+        document.addEventListener('mouseup', dragEnd);
+
+        function dragStart(e) {
+            if (e.target.classList.contains('connection-point') || 
+                e.target.classList.contains('delete-btn') ||
+                e.target.tagName.toLowerCase() === 'button') {
                 return;
             }
 
             isDragging = true;
             element.classList.add('dragging');
 
-            const rect = element.getBoundingClientRect();
-            initialX = e.clientX - rect.left;
-            initialY = e.clientY - rect.top;
+            // Calculer la position initiale en tenant compte du zoom
+            const zoomLevel = currentZoom;
+            initialX = e.clientX / zoomLevel - element.offsetLeft;
+            initialY = e.clientY / zoomLevel - element.offsetTop;
+        }
 
-            document.addEventListener('mousemove', onDrag);
-            document.addEventListener('mouseup', onRelease);
-        });
-
-        function onDrag(e) {
+        function drag(e) {
             if (!isDragging) return;
 
             e.preventDefault();
 
-            currentX = e.clientX - initialX;
-            currentY = e.clientY - initialY;
+            // Appliquer le zoom aux mouvements
+            const zoomLevel = currentZoom;
+            currentX = e.clientX / zoomLevel - initialX;
+            currentY = e.clientY / zoomLevel - initialY;
 
+            // Empêcher les positions négatives
+            currentX = Math.max(0, currentX);
+            currentY = Math.max(0, currentY);
+
+            // Appliquer la position
             element.style.left = currentX + 'px';
             element.style.top = currentY + 'px';
 
             // Mettre à jour les connexions
-            requestAnimationFrame(() => {
-                connections.forEach(conn => {
-                    if (conn.source === element.id || conn.target === element.id) {
-                        conn.line.position();
-                    }
-                });
+            connections.forEach(conn => {
+                if (conn.source === element.id || conn.target === element.id) {
+                    conn.line.position();
+                }
             });
+
+            // Mettre à jour la taille du conteneur pendant le drag
+            requestAnimationFrame(updateGraphSize);
         }
 
-        function onRelease() {
+        function dragEnd() {
+            if (!isDragging) return;
+            
             isDragging = false;
             element.classList.remove('dragging');
-            document.removeEventListener('mousemove', onDrag);
-            document.removeEventListener('mouseup', onRelease);
+
+            // Mettre à jour la taille du conteneur après le drag
+            updateGraphSize();
         }
+
+        // Nettoyer les événements quand le nœud est supprimé
+        element.cleanup = () => {
+            document.removeEventListener('mousemove', drag);
+            document.removeEventListener('mouseup', dragEnd);
+        };
     }
 
     async function startSequence(node) {
@@ -374,24 +522,52 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Ajouter les boutons dans la toolbar
-    const toolbar = document.querySelector('.toolbar');
-    const saveBtn = document.createElement('button');
-    saveBtn.textContent = '💾 Sauvegarder';
-    saveBtn.onclick = saveProject;
-    toolbar.appendChild(saveBtn);
+    function updateGraphSize() {
+        // Trouver les limites des nœuds
+        const nodes = document.querySelectorAll('.scene-node');
+        if (nodes.length === 0) return;
 
-    const loadBtn = document.createElement('button');
-    loadBtn.textContent = '📂 Charger';
-    loadBtn.onclick = () => loadInput.click();
-    toolbar.appendChild(loadBtn);
+        let minX = Infinity, minY = Infinity;
+        let maxX = -Infinity, maxY = -Infinity;
 
-    const loadInput = document.createElement('input');
-    loadInput.type = 'file';
-    loadInput.accept = '.pov';
-    loadInput.style.display = 'none';
-    loadInput.onchange = loadProject;
-    toolbar.appendChild(loadInput);
+        nodes.forEach(node => {
+            const rect = node.getBoundingClientRect();
+            const x = node.offsetLeft;
+            const y = node.offsetTop;
+            const width = rect.width / currentZoom;  // Ajuster pour le zoom
+            const height = rect.height / currentZoom;
+
+            minX = Math.min(minX, x);
+            minY = Math.min(minY, y);
+            maxX = Math.max(maxX, x + width);
+            maxY = Math.max(maxY, y + height);
+        });
+
+        // Ajouter une marge plus grande
+        const margin = 300;
+        maxX += margin;
+        maxY += margin;
+
+        // Mettre à jour la taille du conteneur de zoom
+        const zoomContainer = graphContainer.querySelector('.zoom-container');
+        zoomContainer.style.width = Math.max(maxX, graphContainer.clientWidth) + 'px';
+        zoomContainer.style.height = Math.max(maxY, graphContainer.clientHeight) + 'px';
+    }
+
+    function updateZoom() {
+        const zoomContainer = graphContainer.querySelector('.zoom-container');
+        zoomContainer.style.transform = `scale(${currentZoom})`;
+        const zoomLevel = toolbar.querySelector('.zoom-level');
+        zoomLevel.textContent = `${Math.round(currentZoom * 100)}%`;
+        
+        // Mettre à jour la taille du conteneur
+        updateGraphSize();
+        
+        // Mettre à jour les lignes de connexion
+        connections.forEach(conn => {
+            conn.line.position();
+        });
+    }
 
     async function saveProject() {
         try {
@@ -591,7 +767,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 setupDeleteButton(node);
                 makeDraggable(node);
 
-                graphContainer.appendChild(node);
+                const zoomContainer = graphContainer.querySelector('.zoom-container');
+                zoomContainer.appendChild(node);
                 nodesById.set(nodeData.id, node);
             }
 
