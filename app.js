@@ -392,6 +392,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         
                         const updateLinkInfo = (nodeId) => {
                             linkedNodeId = nodeId;
+                            lineContainer.dataset.linkedNodeId = nodeId || '';
                             if (nodeId) {
                                 const node = document.getElementById(nodeId);
                                 if (node) {
@@ -449,7 +450,13 @@ document.addEventListener('DOMContentLoaded', function() {
                         lineContainer.appendChild(line);
                         lineContainer.appendChild(linkInfo);
                         
-                        return { container: lineContainer, line, linkButton, getLinkedNodeId: () => linkedNodeId };
+                        return { 
+                            container: lineContainer, 
+                            line, 
+                            linkButton, 
+                            getLinkedNodeId: () => linkedNodeId,
+                            updateLinkInfo  // Exposer la fonction pour le chargement
+                        };
                     });
                     
                     const textsWrapper = document.createElement('div');
@@ -501,6 +508,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         target: endNode.id,
                         line: line,
                         textElement: textsWrapper,
+                        textLines: textLines, // Stocker les objets textLines
                         updateTextPosition: updateTextPosition
                     };
 
@@ -703,8 +711,8 @@ document.addEventListener('DOMContentLoaded', function() {
                                 fullscreenText.style.opacity = '0';
                                 fullscreenText.style.display = 'none';
                                 
-                                // Récupérer le nœud lié à cette ligne
-                                const linkedNodeId = linkButton.linkedNodeId;
+                                // Récupérer le nœud lié à cette ligne depuis le dataset
+                                const linkedNodeId = lineContainer.dataset.linkedNodeId;
                                 console.log('ID du nœud lié:', linkedNodeId);
                                 const targetNodeId = linkedNodeId || next.target;
                                 console.log('ID du nœud cible:', targetNodeId);
@@ -939,10 +947,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 target: conn.target,
                 lines: Array.from(conn.textElement.children).map(container => {
                     const line = container.querySelector('.transition-text');
-                    const linkButton = container.querySelector('.link-node-button');
+                    const linkedNodeId = container.dataset.linkedNodeId || null;
                     return {
                         text: line.textContent,
-                        linkedNodeId: linkButton.linkedNodeId || null
+                        linkedNodeId: linkedNodeId
                     };
                 })
             }));
@@ -1142,16 +1150,18 @@ document.addEventListener('DOMContentLoaded', function() {
                         const linkButton = document.createElement('button');
                         linkButton.className = 'link-node-button';
                         linkButton.innerHTML = '🔗';
+                        linkButton.title = 'Lier à un nœud';
                         
                         const linkDestination = document.createElement('span');
                         linkDestination.className = 'link-destination';
                         linkInfo.appendChild(linkButton);
                         linkInfo.appendChild(linkDestination);
                         
-                        let linkedNodeId = lineData.linkedNodeId;
+                        let linkedNodeId = null;
                         
                         const updateLinkInfo = (nodeId) => {
                             linkedNodeId = nodeId;
+                            lineContainer.dataset.linkedNodeId = nodeId || '';
                             if (nodeId) {
                                 const node = document.getElementById(nodeId);
                                 if (node) {
@@ -1209,7 +1219,18 @@ document.addEventListener('DOMContentLoaded', function() {
                         lineContainer.appendChild(line);
                         lineContainer.appendChild(linkInfo);
                         
-                        return { container: lineContainer, line, linkButton };
+                        // Initialiser l'état du lien si un nœud était lié
+                        if (lineData.linkedNodeId) {
+                            updateLinkInfo(lineData.linkedNodeId);
+                        }
+                        
+                        return { 
+                            container: lineContainer, 
+                            line, 
+                            linkButton,
+                            getLinkedNodeId: () => linkedNodeId,
+                            updateLinkInfo
+                        };
                     });
                     
                     const textsWrapper = document.createElement('div');
@@ -1261,6 +1282,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         target: conn.target,
                         line: line,
                         textElement: textsWrapper,
+                        textLines: textLines, // Stocker les objets textLines
                         updateTextPosition: updateTextPosition
                     };
 
@@ -1283,3 +1305,42 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 });
+
+function exportProject() {
+    const nodes = Array.from(document.querySelectorAll('.scene-node')).map(node => {
+        const video = node.querySelector('video');
+        const label = node.querySelector('.node-label');
+        return {
+            id: node.id,
+            position: {
+                x: parseInt(node.style.left),
+                y: parseInt(node.style.top)
+            },
+            videoSrc: video ? video.src : null,
+            label: label ? label.textContent : ''
+        };
+    });
+
+    const conns = connections.map(conn => {
+        const textLines = [];
+        if (conn.textElement) {
+            const lineContainers = conn.textElement.querySelectorAll('.transition-line-container');
+            lineContainers.forEach(container => {
+                textLines.push({
+                    text: container.querySelector('.transition-text').innerHTML,
+                    linkedNodeId: container.dataset.linkedNodeId || null
+                });
+            });
+        }
+        return {
+            source: conn.source,
+            target: conn.target,
+            lines: textLines
+        };
+    });
+
+    return {
+        nodes,
+        connections: conns
+    };
+}
