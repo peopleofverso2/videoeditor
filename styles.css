@@ -708,3 +708,92 @@ body {
     background: rgba(255, 255, 255, 0.1);
     color: white;
 }
+
+/* Project Title */
+.project-title {
+    font-size: 18px;
+    font-weight: bold;
+    color: var(--text-light);
+    margin-right: 20px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 300px;
+}
+
+/* Overview Modal */
+.overview-modal .modal-content {
+    width: 90vw;
+    height: 90vh;
+    max-width: none;
+}
+
+.wide-modal {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.project-stats {
+    display: flex;
+    gap: 20px;
+    font-size: 14px;
+    color: var(--text-light);
+    background: var(--bg-darker);
+    padding: 10px;
+    border-radius: var(--border-radius);
+}
+
+.flowchart-container {
+    flex: 1;
+    background: var(--bg-darker);
+    border-radius: var(--border-radius);
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.flowchart-container canvas {
+    max-width: 100%;
+    max-height: 100%;
+}
+
+/* Modal Fields */
+.modal-field {
+    margin-bottom: 15px;
+}
+
+.modal-field label {
+    display: block;
+    margin-bottom: 5px;
+    color: var(--text-light);
+}
+
+.modal-field input,
+.modal-field textarea {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    background: var(--bg-darker);
+    color: var(--text-light);
+    font-family: inherit;
+}
+
+.modal-field textarea {
+    resize: vertical;
+}
+
+.modal-info {
+    margin: 15px 0;
+    padding: 10px;
+    background: var(--bg-darker);
+    border-radius: var(--border-radius);
+    font-size: 14px;
+    color: var(--text-muted);
+}
+
+.modal-info p {
+    margin: 5px 0;
+}

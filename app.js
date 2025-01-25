@@ -5,6 +5,12 @@ document.addEventListener('DOMContentLoaded', function() {
     let currentNode = null;
     let isPlaying = false;
     let currentZoom = 1;
+    let projectMetadata = {
+        title: 'Nouveau projet',
+        description: '',
+        lastModified: new Date(),
+        version: '1.0'
+    };
 
     // Éléments DOM
     const graphContainer = document.getElementById('graphContainer');
@@ -35,6 +41,18 @@ document.addEventListener('DOMContentLoaded', function() {
         loadBtn.textContent = '📂 Charger';
         loadBtn.onclick = () => loadInput.click();
         toolbar.appendChild(loadBtn);
+
+        // Bouton des métadonnées du projet
+        const metadataBtn = document.createElement('button');
+        metadataBtn.textContent = '📋 Projet';
+        metadataBtn.onclick = showProjectMetadata;
+        toolbar.appendChild(metadataBtn);
+
+        // Bouton de vue d'ensemble
+        const overviewBtn = document.createElement('button');
+        overviewBtn.textContent = '🗺️ Vue d\'ensemble';
+        overviewBtn.onclick = showProjectOverview;
+        toolbar.appendChild(overviewBtn);
 
         // Input de chargement caché
         const loadInput = document.createElement('input');
@@ -959,6 +977,10 @@ document.addEventListener('DOMContentLoaded', function() {
 
             // Créer l'objet projet
             const project = {
+                metadata: {
+                    ...projectMetadata,
+                    lastModified: new Date().toISOString()
+                },
                 nodes: nodes,
                 connections: savedConnections,
                 version: "1.0"
@@ -1017,21 +1039,30 @@ document.addEventListener('DOMContentLoaded', function() {
             
             // Lire le fichier project.json
             const projectJson = await zip.file('project.json').async('text');
-            const project = JSON.parse(projectJson);
+            const projectData = JSON.parse(projectJson);
 
-            console.log('Projet chargé:', project);
-            console.log('Connexions à restaurer:', project.connections);
+            console.log('Projet chargé:', projectData);
+            console.log('Connexions à restaurer:', projectData.connections);
 
             // Nettoyer l'interface
             document.querySelectorAll('.scene-node').forEach(node => node.remove());
             connections.forEach(conn => conn.line.remove());
             connections = [];
 
+            // Charger les métadonnées
+            if (projectData.metadata) {
+                projectMetadata = {
+                    ...projectData.metadata,
+                    lastModified: new Date(projectData.metadata.lastModified)
+                };
+                updateProjectTitle();
+            }
+
             // Créer un Map pour stocker les nœuds par ID
             const nodesById = new Map();
 
             // Charger et créer les nœuds
-            for (const nodeData of project.nodes) {
+            for (const nodeData of projectData.nodes) {
                 // Extraire la vidéo du ZIP
                 const videoFile = await zip.file('videos/' + nodeData.videoName).async('blob');
                 const videoUrl = URL.createObjectURL(videoFile);
@@ -1077,7 +1108,7 @@ document.addEventListener('DOMContentLoaded', function() {
             await new Promise(resolve => setTimeout(resolve, 100));
 
             // Recréer les connexions
-            for (const conn of project.connections) {
+            for (const conn of projectData.connections) {
                 const startNode = nodesById.get(conn.source);
                 const endNode = nodesById.get(conn.target);
                 
@@ -1296,6 +1327,211 @@ document.addEventListener('DOMContentLoaded', function() {
             console.error('Erreur lors du chargement:', error);
             alert('Erreur lors du chargement du projet');
         }
+    }
+
+    // Gestion des métadonnées du projet
+    function showProjectMetadata() {
+        const dialog = document.createElement('div');
+        dialog.className = 'modal';
+        dialog.innerHTML = `
+            <div class="modal-content">
+                <h2>📋 Métadonnées du projet</h2>
+                <div class="modal-field">
+                    <label for="projectTitle">Titre du projet :</label>
+                    <input type="text" id="projectTitle" value="${projectMetadata.title}">
+                </div>
+                <div class="modal-field">
+                    <label for="projectDescription">Description :</label>
+                    <textarea id="projectDescription" rows="4">${projectMetadata.description}</textarea>
+                </div>
+                <div class="modal-info">
+                    <p>Dernière modification : ${projectMetadata.lastModified.toLocaleString()}</p>
+                    <p>Version : ${projectMetadata.version}</p>
+                </div>
+                <div class="modal-buttons">
+                    <button id="cancelMetadata">Annuler</button>
+                    <button id="saveMetadata">Enregistrer</button>
+                </div>
+            </div>
+        `;
+        
+        document.body.appendChild(dialog);
+        
+        const titleInput = dialog.querySelector('#projectTitle');
+        const descriptionInput = dialog.querySelector('#projectDescription');
+        const saveBtn = dialog.querySelector('#saveMetadata');
+        const cancelBtn = dialog.querySelector('#cancelMetadata');
+        
+        saveBtn.onclick = () => {
+            projectMetadata.title = titleInput.value.trim();
+            projectMetadata.description = descriptionInput.value.trim();
+            projectMetadata.lastModified = new Date();
+            document.body.removeChild(dialog);
+            updateProjectTitle();
+        };
+        
+        cancelBtn.onclick = () => {
+            document.body.removeChild(dialog);
+        };
+    }
+
+    // Mise à jour du titre du projet dans l'interface
+    function updateProjectTitle() {
+        document.title = `${projectMetadata.title} - Éditeur Vidéo`;
+        const titleElement = document.querySelector('.project-title');
+        if (titleElement) {
+            titleElement.textContent = projectMetadata.title;
+        } else {
+            const title = document.createElement('div');
+            title.className = 'project-title';
+            title.textContent = projectMetadata.title;
+            toolbar.insertBefore(title, toolbar.firstChild);
+        }
+    }
+
+    // Vue d'ensemble du projet
+    function showProjectOverview() {
+        const dialog = document.createElement('div');
+        dialog.className = 'modal overview-modal';
+        
+        // Créer un canvas pour le flowchart
+        const canvas = document.createElement('canvas');
+        canvas.width = window.innerWidth * 0.8;
+        canvas.height = window.innerHeight * 0.8;
+        
+        dialog.innerHTML = `
+            <div class="modal-content wide-modal">
+                <h2>🗺️ Vue d'ensemble du projet</h2>
+                <div class="project-stats">
+                    <div>Nombre de vidéos : ${document.querySelectorAll('.scene-node').length}</div>
+                    <div>Nombre de transitions : ${connections.length}</div>
+                </div>
+                <div class="flowchart-container"></div>
+                <div class="modal-buttons">
+                    <button id="closeOverview">Fermer</button>
+                    <button id="exportOverview">Exporter PNG</button>
+                </div>
+            </div>
+        `;
+        
+        document.body.appendChild(dialog);
+        dialog.querySelector('.flowchart-container').appendChild(canvas);
+        
+        // Dessiner le flowchart
+        drawFlowchart(canvas);
+        
+        const closeBtn = dialog.querySelector('#closeOverview');
+        const exportBtn = dialog.querySelector('#exportOverview');
+        
+        closeBtn.onclick = () => {
+            document.body.removeChild(dialog);
+        };
+        
+        exportBtn.onclick = () => {
+            const dataUrl = canvas.toDataURL('image/png');
+            const link = document.createElement('a');
+            link.download = `${projectMetadata.title}_flowchart.png`;
+            link.href = dataUrl;
+            link.click();
+        };
+    }
+
+    // Dessiner le flowchart
+    function drawFlowchart(canvas) {
+        const ctx = canvas.getContext('2d');
+        const nodes = Array.from(document.querySelectorAll('.scene-node'));
+        
+        // Style
+        ctx.font = '14px Arial';
+        ctx.lineWidth = 2;
+        ctx.strokeStyle = '#4CAF50';
+        
+        // Calculer les positions
+        const nodeWidth = 150;
+        const nodeHeight = 80;
+        const horizontalSpacing = 200;
+        const verticalSpacing = 120;
+        
+        // Créer une carte des niveaux
+        const levels = new Map();
+        const visited = new Set();
+        
+        function findLevel(nodeId, level = 0) {
+            if (visited.has(nodeId)) return;
+            visited.add(nodeId);
+            
+            if (!levels.has(level)) {
+                levels.set(level, []);
+            }
+            levels.get(level).push(nodeId);
+            
+            // Trouver les connexions sortantes
+            connections.forEach(conn => {
+                if (conn.source === nodeId) {
+                    findLevel(conn.target, level + 1);
+                }
+            });
+        }
+        
+        // Trouver les nœuds racines (sans connexions entrantes)
+        const rootNodes = nodes.filter(node => 
+            !connections.some(conn => conn.target === node.id)
+        );
+        
+        // Construire les niveaux
+        rootNodes.forEach(node => findLevel(node.id));
+        
+        // Dessiner les nœuds et les connexions
+        levels.forEach((nodeIds, level) => {
+            const y = 50 + level * verticalSpacing;
+            nodeIds.forEach((nodeId, index) => {
+                const x = 50 + index * horizontalSpacing;
+                const node = document.getElementById(nodeId);
+                const title = node.querySelector('.title')?.textContent || nodeId;
+                
+                // Dessiner le nœud
+                ctx.fillStyle = '#2C3E50';
+                ctx.fillRect(x, y, nodeWidth, nodeHeight);
+                ctx.strokeRect(x, y, nodeWidth, nodeHeight);
+                
+                // Dessiner le titre
+                ctx.fillStyle = '#FFFFFF';
+                ctx.fillText(title, x + 10, y + 30);
+                
+                // Stocker la position pour les connexions
+                node._flowchartPos = { x: x + nodeWidth/2, y: y + nodeHeight/2 };
+            });
+        });
+        
+        // Dessiner les connexions
+        ctx.beginPath();
+        connections.forEach(conn => {
+            const startNode = document.getElementById(conn.source);
+            const endNode = document.getElementById(conn.target);
+            
+            if (startNode._flowchartPos && endNode._flowchartPos) {
+                const start = startNode._flowchartPos;
+                const end = endNode._flowchartPos;
+                
+                ctx.moveTo(start.x, start.y);
+                ctx.lineTo(end.x, end.y);
+                
+                // Dessiner la flèche
+                const angle = Math.atan2(end.y - start.y, end.x - start.x);
+                const arrowLength = 15;
+                
+                ctx.lineTo(
+                    end.x - arrowLength * Math.cos(angle - Math.PI/6),
+                    end.y - arrowLength * Math.sin(angle - Math.PI/6)
+                );
+                ctx.moveTo(end.x, end.y);
+                ctx.lineTo(
+                    end.x - arrowLength * Math.cos(angle + Math.PI/6),
+                    end.y - arrowLength * Math.sin(angle + Math.PI/6)
+                );
+            }
+        });
+        ctx.stroke();
     }
 
     // Annuler la connexion avec Escape
