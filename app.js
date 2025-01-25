@@ -678,7 +678,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
             if (next) {
                 // Afficher le texte de transition si présent
-                console.log('Texte de transition:', next.textElement?.textContent);
                 if (next.textElement && Array.from(next.textElement.children).some(lineContainer => lineContainer.querySelector('.transition-text').textContent.trim())) {
                     // Cacher la vidéo mais garder le fond noir
                     console.log('Fondu de la vidéo...');
@@ -706,33 +705,19 @@ document.addEventListener('DOMContentLoaded', function() {
                             fullscreenLine.addEventListener('mouseleave', () => {
                                 fullscreenLine.classList.remove('hover');
                             });
-                            fullscreenLine.addEventListener('click', async () => {
-                                // Cacher le texte immédiatement
-                                fullscreenText.style.opacity = '0';
-                                fullscreenText.style.display = 'none';
-                                
-                                // Récupérer le nœud lié à cette ligne depuis le dataset
-                                const linkedNodeId = lineContainer.dataset.linkedNodeId;
-                                console.log('ID du nœud lié:', linkedNodeId);
-                                const targetNodeId = linkedNodeId || next.target;
-                                console.log('ID du nœud cible:', targetNodeId);
-                                
-                                // Démarrer la vidéo liée ou la suivante par défaut
-                                const nextNode = document.getElementById(targetNodeId);
-                                if (nextNode) {
-                                    console.log('Lecture du nœud:', nextNode.id);
-                                    const nextVideo = nextNode.querySelector('video');
-                                    if (nextVideo) {
-                                        fullscreenVideo.src = nextVideo.src;
-                                        fullscreenVideo.currentTime = 0;
-                                        fullscreenVideo.style.display = 'block';
-                                        await fullscreenVideo.play();
-                                        fullscreenVideo.style.opacity = '1';
-                                        
-                                        // Continuer la séquence depuis ce nœud
-                                        await playSequence(nextNode);
-                                    }
-                                }
+                            
+                            // Attendre le clic sur un texte
+                            const clickPromise = new Promise(resolve => {
+                                fullscreenLine.addEventListener('click', async () => {
+                                    // Cacher le texte immédiatement
+                                    fullscreenText.style.opacity = '0';
+                                    fullscreenText.style.display = 'none';
+                                    
+                                    // Récupérer le nœud lié à cette ligne depuis le dataset
+                                    const linkedNodeId = lineContainer.dataset.linkedNodeId;
+                                    console.log('ID du nœud lié:', linkedNodeId);
+                                    resolve(linkedNodeId || next.target);
+                                });
                             });
                             
                             fullscreenText.appendChild(fullscreenLine);
@@ -742,38 +727,42 @@ document.addEventListener('DOMContentLoaded', function() {
                     fullscreenText.style.display = 'flex';
                     fullscreenText.style.opacity = '1';
                     
-                    // Attendre 2 secondes
-                    console.log('Attente...');
-                    await new Promise(resolve => setTimeout(resolve, 2000));
+                    // Attendre qu'un texte soit cliqué
+                    const targetNodeId = await clickPromise;
+                    console.log('ID du nœud cible:', targetNodeId);
                     
-                    // Cacher le texte
-                    console.log('Disparition du texte...');
-                    fullscreenText.style.opacity = '0';
-                    await new Promise(resolve => setTimeout(resolve, 500));
-                    fullscreenText.style.display = 'none';
-                }
-
-                const nextNode = document.getElementById(next.target);
-                if (nextNode) {
-                    console.log('Lecture du prochain nœud');
-                    // Préparer la prochaine vidéo
-                    const nextVideo = nextNode.querySelector('video');
-                    if (nextVideo) {
-                        fullscreenVideo.src = nextVideo.src;
-                        fullscreenVideo.currentTime = 0;
-                        
-                        // Si pas de texte, transition instantanée
-                        if (!next.textElement || !Array.from(next.textElement.children).some(lineContainer => lineContainer.querySelector('.transition-text').textContent.trim())) {
-                            fullscreenVideo.style.display = 'block';
-                            fullscreenVideo.style.opacity = '1';
-                        } else {
-                            // Sinon, fondu normal
+                    // Démarrer la vidéo liée ou la suivante par défaut
+                    const nextNode = document.getElementById(targetNodeId);
+                    if (nextNode) {
+                        console.log('Lecture du nœud:', nextNode.id);
+                        const nextVideo = nextNode.querySelector('video');
+                        if (nextVideo) {
+                            fullscreenVideo.src = nextVideo.src;
+                            fullscreenVideo.currentTime = 0;
                             fullscreenVideo.style.display = 'block';
                             await fullscreenVideo.play();
                             fullscreenVideo.style.opacity = '1';
+                            
+                            // Continuer la séquence depuis ce nœud
+                            await playSequence(nextNode);
                         }
-                        
-                        await playSequence(nextNode);
+                    }
+                } else {
+                    const nextNode = document.getElementById(next.target);
+                    if (nextNode) {
+                        console.log('Lecture du prochain nœud');
+                        // Préparer la prochaine vidéo
+                        const nextVideo = nextNode.querySelector('video');
+                        if (nextVideo) {
+                            fullscreenVideo.src = nextVideo.src;
+                            fullscreenVideo.currentTime = 0;
+                            
+                            // Si pas de texte, transition instantanée
+                            fullscreenVideo.style.display = 'block';
+                            fullscreenVideo.style.opacity = '1';
+                            
+                            await playSequence(nextNode);
+                        }
                     }
                 }
             }

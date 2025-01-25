@@ -355,12 +355,29 @@ body {
 }
 
 .fullscreen-text-line {
-    font-size: 48px;
-    line-height: 1.2;
-    padding: 10px 20px;
-    border-radius: 8px;
+    color: white;
+    font-size: 2em;
+    text-align: center;
+    margin: 20px;
+    padding: 15px 30px;
+    border-radius: 10px;
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(5px);
+    cursor: pointer;
     transition: all 0.3s ease;
-    position: relative;
+    border: 2px solid transparent;
+}
+
+.fullscreen-text-line:hover {
+    background: rgba(76, 175, 80, 0.3);
+    border-color: rgba(255, 255, 255, 0.5);
+    transform: scale(1.05);
+}
+
+.fullscreen-text-line.hover {
+    background: rgba(76, 175, 80, 0.3);
+    border-color: rgba(255, 255, 255, 0.5);
+    transform: scale(1.05);
 }
 
 .fullscreen-text-line::after {
@@ -373,11 +390,6 @@ body {
     background: white;
     transition: all 0.3s ease;
     transform: translateX(-50%);
-}
-
-.fullscreen-text-line.hover {
-    transform: scale(1.1);
-    text-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
 }
 
 .fullscreen-text-line.hover::after {
