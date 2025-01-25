@@ -991,7 +991,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 target: conn.target,
                 lines: Array.from(conn.textElement.children).map(container => {
                     const line = container.querySelector('.transition-text');
-                    const linkedNodeId = container.dataset.linkedNodeId || null;
+                    const linkedNodeId = container.dataset.linkedNodeId;
                     return {
                         text: line.textContent,
                         linkedNodeId: linkedNodeId
@@ -1373,22 +1373,41 @@ document.addEventListener('DOMContentLoaded', function() {
             Array.from(connection.textElement.children).forEach(lineContainer => {
                 const line = lineContainer.querySelector('.transition-text');
                 if (line) {
-                    addTextLine(linesContainer, line.value, lineContainer.dataset.linkedNodeId);
+                    const newLine = document.createElement('div');
+                    newLine.className = 'transition-text-line-container';
+                    
+                    const inputGroup = document.createElement('div');
+                    inputGroup.className = 'transition-text-input-group';
+                    
+                    const textInput = document.createElement('input');
+                    textInput.type = 'text';
+                    textInput.className = 'transition-text';
+                    textInput.value = line.textContent;
+                    inputGroup.appendChild(textInput);
+                    
+                    newLine.appendChild(inputGroup);
+                    linesContainer.appendChild(newLine);
                 }
             });
         }
 
         // S'il n'y a pas de lignes, en ajouter une vide
         if (linesContainer.children.length === 0) {
-            addTextLine(linesContainer);
+            const newLine = document.createElement('div');
+            newLine.className = 'transition-text-line-container';
+            
+            const inputGroup = document.createElement('div');
+            inputGroup.className = 'transition-text-input-group';
+            
+            const textInput = document.createElement('input');
+            textInput.type = 'text';
+            textInput.className = 'transition-text';
+            textInput.placeholder = 'Texte de transition...';
+            inputGroup.appendChild(textInput);
+            
+            newLine.appendChild(inputGroup);
+            linesContainer.appendChild(newLine);
         }
-
-        // Bouton pour ajouter une ligne
-        const addButton = document.createElement('button');
-        addButton.className = 'transition-text-add';
-        addButton.textContent = '+ Ajouter une ligne';
-        addButton.onclick = () => addTextLine(linesContainer);
-        textBlock.appendChild(addButton);
 
         editor.appendChild(textBlock);
         
@@ -1407,10 +1426,8 @@ document.addEventListener('DOMContentLoaded', function() {
         saveButton.onclick = () => {
             const lines = Array.from(linesContainer.children).map(lineContainer => {
                 const textInput = lineContainer.querySelector('.transition-text');
-                const text = textInput.value.trim();
-                const linkedNodeId = lineContainer.dataset.linkedNodeId;
-                return { text, linkedNodeId };
-            }).filter(line => line.text); // Filtrer les lignes vides
+                return { text: textInput.value.trim() };
+            }).filter(line => line.text);
 
             if (connection) {
                 // Mettre à jour la connexion existante
@@ -1433,68 +1450,6 @@ document.addEventListener('DOMContentLoaded', function() {
         document.body.appendChild(editor);
     }
 
-    function addTextLine(container, initialText = '', linkedNodeId = null) {
-        const lineContainer = document.createElement('div');
-        lineContainer.className = 'transition-text-line-container';
-        if (linkedNodeId) {
-            lineContainer.dataset.linkedNodeId = linkedNodeId;
-        }
-
-        // Groupe texte + lien
-        const inputGroup = document.createElement('div');
-        inputGroup.className = 'transition-text-input-group';
-
-        // Input pour le texte
-        const textInput = document.createElement('input');
-        textInput.type = 'text';
-        textInput.className = 'transition-text';
-        textInput.value = initialText;
-        textInput.placeholder = 'Texte de transition...';
-        inputGroup.appendChild(textInput);
-
-        // Sélecteur de nœud lié
-        const linkButton = document.createElement('button');
-        linkButton.className = 'link-node-button';
-        linkButton.innerHTML = '🔗';
-        linkButton.title = 'Lier à un nœud';
-        if (linkedNodeId) {
-            linkButton.classList.add('active');
-        }
-        linkButton.onclick = () => {
-            // Activer le mode sélection
-            isLinking = true;
-            currentLinkingLine = lineContainer;
-            document.body.classList.add('linking-mode');
-            linkButton.classList.add('active');
-        };
-        inputGroup.appendChild(linkButton);
-
-        // Bouton de suppression
-        const deleteButton = document.createElement('button');
-        deleteButton.className = 'transition-text-delete';
-        deleteButton.innerHTML = '×';
-        deleteButton.title = 'Supprimer cette ligne';
-        deleteButton.onclick = () => {
-            if (container.children.length > 1) {
-                lineContainer.remove();
-            } else {
-                // Si c'est la dernière ligne, juste vider le texte
-                textInput.value = '';
-                lineContainer.dataset.linkedNodeId = '';
-                linkButton.classList.remove('active');
-            }
-        };
-        inputGroup.appendChild(deleteButton);
-
-        lineContainer.appendChild(inputGroup);
-        container.appendChild(lineContainer);
-        
-        // Focus sur le nouveau champ
-        if (!initialText) {
-            textInput.focus();
-        }
-    }
-
     function updateConnectionText(connection, lines) {
         // Créer ou mettre à jour l'élément de texte
         if (!connection.textElement) {
@@ -1505,12 +1460,9 @@ document.addEventListener('DOMContentLoaded', function() {
         
         connection.textElement.innerHTML = '';
         
-        lines.forEach(({ text, linkedNodeId }) => {
+        lines.forEach(({ text }) => {
             const lineContainer = document.createElement('div');
             lineContainer.className = 'connection-text-line';
-            if (linkedNodeId) {
-                lineContainer.dataset.linkedNodeId = linkedNodeId;
-            }
             
             const textElement = document.createElement('div');
             textElement.className = 'transition-text';
