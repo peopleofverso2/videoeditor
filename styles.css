@@ -247,33 +247,68 @@ body {
 
 .connection-point {
     position: absolute;
-    width: 16px;
-    height: 16px;
-    background: white;
-    border: 2px solid #4CAF50;
+    width: 14px;
+    height: 14px;
+    background: #4CAF50;
+    border: 2px solid #2E7D32;
     border-radius: 50%;
     cursor: pointer;
-    z-index: 100;
-    transition: all 0.2s;
+    z-index: 10;
+    transition: all 0.2s ease;
+    box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.1);
+}
+
+.connection-point:hover {
+    transform: scale(1.2);
+    background: #66BB6A;
+    box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.2);
+}
+
+.connection-point.active {
+    background: #FFC107;
+    border-color: #FFA000;
+    transform: scale(1.2);
+    box-shadow: 0 0 10px rgba(255, 193, 7, 0.5);
 }
 
 .connection-point.top {
-    top: -10px;
+    top: -7px;
     left: 50%;
     transform: translateX(-50%);
 }
 
 .connection-point.bottom {
-    bottom: -10px;
+    bottom: -7px;
     left: 50%;
     transform: translateX(-50%);
 }
 
-.connection-point:hover,
-.connection-point.active {
-    background: #4CAF50;
+.connection-point.top:hover,
+.connection-point.bottom:hover,
+.connection-point.top.active,
+.connection-point.bottom.active {
     transform: translateX(-50%) scale(1.2);
-    box-shadow: 0 0 0 2px white;
+}
+
+.connection-point.top::after,
+.connection-point.bottom::after {
+    content: '';
+    position: absolute;
+    width: 6px;
+    height: 6px;
+    border-left: 2px solid rgba(255, 255, 255, 0.8);
+    border-top: 2px solid rgba(255, 255, 255, 0.8);
+    left: 50%;
+    transform: translateX(-50%) rotate(45deg);
+}
+
+.connection-point.top::after {
+    top: 5px;
+}
+
+.connection-point.bottom::after {
+    top: 2px;
+    transform: translateX(-50%) rotate(-135deg);
 }
 
 .scene-node::after {
