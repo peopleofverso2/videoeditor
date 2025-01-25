@@ -688,38 +688,15 @@ document.addEventListener('DOMContentLoaded', function() {
                     // Afficher le texte
                     console.log('Affichage du texte...');
                     fullscreenText.innerHTML = '';
+                    let index = 0;
                     Array.from(next.textElement.children).forEach(lineContainer => {
                         const line = lineContainer.querySelector('.transition-text');
-                        const linkButton = lineContainer.querySelector('.link-node-button');
                         
                         if (line.textContent.trim()) {
                             const fullscreenLine = document.createElement('div');
                             fullscreenLine.className = 'fullscreen-text-line';
+                            fullscreenLine.style.setProperty('--index', index++);
                             fullscreenLine.textContent = line.textContent;
-                            
-                            // Rendre la ligne cliquable
-                            fullscreenLine.style.cursor = 'pointer';
-                            fullscreenLine.addEventListener('mouseenter', () => {
-                                fullscreenLine.classList.add('hover');
-                            });
-                            fullscreenLine.addEventListener('mouseleave', () => {
-                                fullscreenLine.classList.remove('hover');
-                            });
-                            
-                            // Attendre le clic sur un texte
-                            const clickPromise = new Promise(resolve => {
-                                fullscreenLine.addEventListener('click', async () => {
-                                    // Cacher le texte immédiatement
-                                    fullscreenText.style.opacity = '0';
-                                    fullscreenText.style.display = 'none';
-                                    
-                                    // Récupérer le nœud lié à cette ligne depuis le dataset
-                                    const linkedNodeId = lineContainer.dataset.linkedNodeId;
-                                    console.log('ID du nœud lié:', linkedNodeId);
-                                    resolve(linkedNodeId || next.target);
-                                });
-                            });
-                            
                             fullscreenText.appendChild(fullscreenLine);
                         }
                     });
@@ -727,42 +704,38 @@ document.addEventListener('DOMContentLoaded', function() {
                     fullscreenText.style.display = 'flex';
                     fullscreenText.style.opacity = '1';
                     
-                    // Attendre qu'un texte soit cliqué
-                    const targetNodeId = await clickPromise;
-                    console.log('ID du nœud cible:', targetNodeId);
+                    // Attendre 2 secondes
+                    console.log('Attente...');
+                    await new Promise(resolve => setTimeout(resolve, 2000));
                     
-                    // Démarrer la vidéo liée ou la suivante par défaut
-                    const nextNode = document.getElementById(targetNodeId);
-                    if (nextNode) {
-                        console.log('Lecture du nœud:', nextNode.id);
-                        const nextVideo = nextNode.querySelector('video');
-                        if (nextVideo) {
-                            fullscreenVideo.src = nextVideo.src;
-                            fullscreenVideo.currentTime = 0;
+                    // Cacher le texte
+                    console.log('Disparition du texte...');
+                    fullscreenText.style.opacity = '0';
+                    await new Promise(resolve => setTimeout(resolve, 500));
+                    fullscreenText.style.display = 'none';
+                }
+
+                const nextNode = document.getElementById(next.target);
+                if (nextNode) {
+                    console.log('Lecture du prochain nœud');
+                    // Préparer la prochaine vidéo
+                    const nextVideo = nextNode.querySelector('video');
+                    if (nextVideo) {
+                        fullscreenVideo.src = nextVideo.src;
+                        fullscreenVideo.currentTime = 0;
+                        
+                        // Si pas de texte, transition instantanée
+                        if (!next.textElement || !Array.from(next.textElement.children).some(lineContainer => lineContainer.querySelector('.transition-text').textContent.trim())) {
+                            fullscreenVideo.style.display = 'block';
+                            fullscreenVideo.style.opacity = '1';
+                        } else {
+                            // Sinon, fondu normal
                             fullscreenVideo.style.display = 'block';
                             await fullscreenVideo.play();
                             fullscreenVideo.style.opacity = '1';
-                            
-                            // Continuer la séquence depuis ce nœud
-                            await playSequence(nextNode);
                         }
-                    }
-                } else {
-                    const nextNode = document.getElementById(next.target);
-                    if (nextNode) {
-                        console.log('Lecture du prochain nœud');
-                        // Préparer la prochaine vidéo
-                        const nextVideo = nextNode.querySelector('video');
-                        if (nextVideo) {
-                            fullscreenVideo.src = nextVideo.src;
-                            fullscreenVideo.currentTime = 0;
-                            
-                            // Si pas de texte, transition instantanée
-                            fullscreenVideo.style.display = 'block';
-                            fullscreenVideo.style.opacity = '1';
-                            
-                            await playSequence(nextNode);
-                        }
+                        
+                        await playSequence(nextNode);
                     }
                 }
             }
