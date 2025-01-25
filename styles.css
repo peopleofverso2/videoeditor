@@ -362,6 +362,32 @@ body {
     transform: translateY(20px);
     animation: fadeInUp 0.5s forwards;
     animation-delay: calc(var(--index) * 0.1s);
+    transition: all 0.3s ease;
+}
+
+.fullscreen-text-line.linked {
+    position: relative;
+    cursor: pointer;
+}
+
+.fullscreen-text-line.linked:hover {
+    color: #4CAF50;
+}
+
+.fullscreen-text-line.linked::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0;
+    height: 2px;
+    background: #4CAF50;
+    transition: width 0.3s ease;
+}
+
+.fullscreen-text-line.linked:hover::after {
+    width: 100%;
 }
 
 @keyframes fadeInUp {

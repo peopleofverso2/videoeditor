@@ -689,14 +689,33 @@ document.addEventListener('DOMContentLoaded', function() {
                     console.log('Affichage du texte...');
                     fullscreenText.innerHTML = '';
                     let index = 0;
+                    let nextNodeId = next.target;
+
                     Array.from(next.textElement.children).forEach(lineContainer => {
                         const line = lineContainer.querySelector('.transition-text');
+                        const linkedNodeId = lineContainer.dataset.linkedNodeId;
                         
                         if (line.textContent.trim()) {
                             const fullscreenLine = document.createElement('div');
                             fullscreenLine.className = 'fullscreen-text-line';
+                            if (linkedNodeId) {
+                                fullscreenLine.classList.add('linked');
+                            }
                             fullscreenLine.style.setProperty('--index', index++);
                             fullscreenLine.textContent = line.textContent;
+
+                            // Rendre la ligne cliquable si elle a un lien
+                            if (linkedNodeId) {
+                                fullscreenLine.style.cursor = 'pointer';
+                                fullscreenLine.addEventListener('click', () => {
+                                    nextNodeId = linkedNodeId;
+                                    if (!autoPlay) {
+                                        // Déclencher le bouton de lecture
+                                        playPauseBtn.click();
+                                    }
+                                });
+                            }
+                            
                             fullscreenText.appendChild(fullscreenLine);
                         }
                     });
@@ -705,19 +724,17 @@ document.addEventListener('DOMContentLoaded', function() {
                     fullscreenText.style.opacity = '1';
                     
                     // Attendre en fonction du mode de lecture
-                    const controls = document.querySelector('.playback-controls');
-                    const playPauseBtn = controls.querySelector('.play-pause');
-                    const autoPlay = controls.querySelector('.auto-play').classList.contains('active');
-
                     if (autoPlay) {
                         // Lecture automatique après 2 secondes
                         await new Promise(resolve => setTimeout(resolve, 2000));
                     } else {
                         // Attendre le clic sur le bouton de lecture
+                        isWaitingForNext = true;
                         playPauseBtn.textContent = '⏵';
                         await new Promise(resolve => {
                             const onClick = () => {
                                 playPauseBtn.removeEventListener('click', onClick);
+                                isWaitingForNext = false;
                                 resolve();
                             };
                             playPauseBtn.addEventListener('click', onClick);
@@ -729,29 +746,39 @@ document.addEventListener('DOMContentLoaded', function() {
                     fullscreenText.style.opacity = '0';
                     await new Promise(resolve => setTimeout(resolve, 500));
                     fullscreenText.style.display = 'none';
-                }
 
-                const nextNode = document.getElementById(next.target);
-                if (nextNode) {
-                    console.log('Lecture du prochain nœud');
-                    // Préparer la prochaine vidéo
-                    const nextVideo = nextNode.querySelector('video');
-                    if (nextVideo) {
-                        fullscreenVideo.src = nextVideo.src;
-                        fullscreenVideo.currentTime = 0;
-                        
-                        // Si pas de texte, transition instantanée
-                        if (!next.textElement || !Array.from(next.textElement.children).some(lineContainer => lineContainer.querySelector('.transition-text').textContent.trim())) {
-                            fullscreenVideo.style.display = 'block';
-                            fullscreenVideo.style.opacity = '1';
-                        } else {
-                            // Sinon, fondu normal
+                    // Utiliser le nœud sélectionné ou le nœud par défaut
+                    const nextNode = document.getElementById(nextNodeId);
+                    if (nextNode) {
+                        console.log('Lecture du nœud:', nextNode.id);
+                        const nextVideo = nextNode.querySelector('video');
+                        if (nextVideo) {
+                            fullscreenVideo.src = nextVideo.src;
+                            fullscreenVideo.currentTime = 0;
                             fullscreenVideo.style.display = 'block';
                             await fullscreenVideo.play();
                             fullscreenVideo.style.opacity = '1';
+                            
+                            // Continuer la séquence depuis ce nœud
+                            await playSequence(nextNode);
                         }
-                        
-                        await playSequence(nextNode);
+                    }
+                } else {
+                    const nextNode = document.getElementById(next.target);
+                    if (nextNode) {
+                        console.log('Lecture du prochain nœud');
+                        // Préparer la prochaine vidéo
+                        const nextVideo = nextNode.querySelector('video');
+                        if (nextVideo) {
+                            fullscreenVideo.src = nextVideo.src;
+                            fullscreenVideo.currentTime = 0;
+                            
+                            // Si pas de texte, transition instantanée
+                            fullscreenVideo.style.display = 'block';
+                            fullscreenVideo.style.opacity = '1';
+                            
+                            await playSequence(nextNode);
+                        }
                     }
                 }
             }
