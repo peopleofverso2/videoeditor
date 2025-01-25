@@ -454,7 +454,7 @@ document.addEventListener('DOMContentLoaded', function() {
             startPoint,
             endPoint,
             {
-                color: '#4CAF50',
+                color: '#18A0FB',  // Couleur Figma
                 size: 4,
                 path: 'straight',
                 startSocket: startPoint.classList.contains('top') ? 'bottom' : 'top',
@@ -462,13 +462,18 @@ document.addEventListener('DOMContentLoaded', function() {
                 startPlug: 'disc',
                 endPlug: 'arrow3',
                 gradient: true,
-                dropShadow: true,
+                dropShadow: {
+                    dx: 0,
+                    dy: 2,
+                    blur: 3,
+                    color: 'rgba(0, 0, 0, 0.2)'
+                },
                 endPlugSize: 3.5,
                 startPlugSize: 1.5,
                 dash: false,
                 endPlugOutline: false,
                 startPlugOutline: false,
-                endPlugOffset: 30,  // Augmenté à 30px
+                endPlugOffset: 30,
                 startPlugOffset: 5
             }
         );
@@ -1050,7 +1055,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     const endPoint = endNode.querySelector('.connection-point.top');
 
                     const line = new LeaderLine(startPoint, endPoint, {
-                        color: '#4CAF50',
+                        color: '#18A0FB',  // Couleur Figma
                         size: 2,
                         path: 'straight',
                         startSocket: 'bottom',

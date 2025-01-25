@@ -1,3 +1,16 @@
+/* Variables Figma-like */
+:root {
+    --figma-blue: #18A0FB;
+    --figma-hover: #2EAAFC;
+    --figma-bg: #2C2C2C;
+    --figma-surface: #363636;
+    --figma-text: #FFFFFF;
+    --figma-text-secondary: rgba(255, 255, 255, 0.8);
+    --figma-border: rgba(255, 255, 255, 0.1);
+    --figma-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    --figma-radius: 6px;
+}
+
 * {
     margin: 0;
     padding: 0;
@@ -6,7 +19,8 @@
 
 body {
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
-    background-color: #f5f5f5;
+    background-color: var(--figma-bg);
+    color: var(--figma-text);
 }
 
 #app {
@@ -16,29 +30,38 @@ body {
 }
 
 .toolbar {
-    background: white;
-    padding: 1rem;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    background: var(--figma-surface);
+    border: 1px solid var(--figma-border);
+    border-radius: var(--figma-radius);
+    box-shadow: var(--figma-shadow);
+    padding: 8px;
     display: flex;
     gap: 10px;
     padding: 10px;
-    background: white;
-    border-bottom: 1px solid #ddd;
+    border-bottom: 1px solid var(--figma-border);
     align-items: center;
 }
 
 .toolbar button {
-    background: #4CAF50;
-    color: white;
-    border: none;
-    padding: 0.5rem 1rem;
+    background: transparent;
+    border: 1px solid var(--figma-border);
+    color: var(--figma-text);
+    padding: 8px 12px;
     border-radius: 4px;
     cursor: pointer;
-    font-size: 14px;
+    transition: all 0.2s;
+    font-size: 13px;
 }
 
 .toolbar button:hover {
-    background: #45a049;
+    background: rgba(255, 255, 255, 0.05);
+    border-color: rgba(255, 255, 255, 0.2);
+}
+
+.toolbar button.active {
+    background: var(--figma-blue);
+    border-color: var(--figma-blue);
+    color: white;
 }
 
 .zoom-controls {
@@ -51,7 +74,7 @@ body {
 .zoom-controls button {
     padding: 5px 10px;
     border: none;
-    background: #f0f0f0;
+    background: var(--figma-surface);
     border-radius: 4px;
     cursor: pointer;
     font-size: 1.2em;
@@ -64,14 +87,14 @@ body {
 .zoom-level {
     padding: 0 10px;
     font-size: 0.9em;
-    color: #666;
+    color: var(--figma-text-secondary);
 }
 
 #workspace {
     position: relative;
     flex: 1;
     overflow: hidden;
-    background: #f5f5f5;
+    background: var(--figma-bg);
     min-height: 300px;
 }
 
@@ -84,21 +107,21 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    border: 3px dashed #ccc;
+    border: 3px dashed var(--figma-border);
     margin: 2rem;
     border-radius: 8px;
-    background: white;
+    background: var(--figma-surface);
     transition: all 0.3s ease;
 }
 
 .drop-zone.dragover {
-    border-color: #4CAF50;
-    background: #e8f5e9;
+    border-color: var(--figma-blue);
+    background: var(--figma-hover);
 }
 
 .drop-message {
     text-align: center;
-    color: #666;
+    color: var(--figma-text-secondary);
 }
 
 .drop-icon {
@@ -113,7 +136,7 @@ body {
 
 .drop-subtext {
     font-size: 0.9rem;
-    color: #999;
+    color: var(--figma-text-secondary);
 }
 
 #graphContainer {
@@ -157,9 +180,11 @@ body {
 /* Nœuds vidéo */
 .scene-node {
     position: absolute;
-    background: white;
-    border-radius: 8px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    background: var(--figma-surface);
+    border: 1px solid var(--figma-border);
+    border-radius: var(--figma-radius);
+    box-shadow: var(--figma-shadow);
+    transition: all 0.2s ease;
     width: 300px;
     min-width: 200px;
     max-width: 800px;
@@ -174,7 +199,7 @@ body {
 }
 
 .scene-node.playing {
-    box-shadow: 0 0 0 2px #4CAF50;
+    box-shadow: 0 0 0 2px var(--figma-blue);
 }
 
 .video-container {
@@ -239,7 +264,7 @@ body {
 .title {
     padding: 0.5rem;
     font-size: 0.9rem;
-    border-bottom: 1px solid #eee;
+    border-bottom: 1px solid var(--figma-border);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -247,11 +272,11 @@ body {
 
 .connection-point {
     position: absolute;
-    width: 14px;
-    height: 14px;
-    background: #4CAF50;
-    border: 2px solid #2E7D32;
-    border-radius: 50%;
+    width: 12px;
+    height: 12px;
+    background: var(--figma-surface);
+    border: 2px solid var(--figma-blue);
+    border-radius: 6px;
     cursor: pointer;
     z-index: 10;
     transition: all 0.2s ease;
@@ -259,16 +284,13 @@ body {
 }
 
 .connection-point:hover {
-    transform: scale(1.2);
-    background: #66BB6A;
-    box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.2);
+    background: var(--figma-blue);
+    transform: scale(1.1);
 }
 
 .connection-point.active {
-    background: #FFC107;
-    border-color: #FFA000;
-    transform: scale(1.2);
-    box-shadow: 0 0 10px rgba(255, 193, 7, 0.5);
+    background: var(--figma-blue);
+    box-shadow: 0 0 0 4px rgba(24, 160, 251, 0.2);
 }
 
 .connection-point.top {
@@ -287,7 +309,7 @@ body {
 .connection-point.bottom:hover,
 .connection-point.top.active,
 .connection-point.bottom.active {
-    transform: translateX(-50%) scale(1.2);
+    transform: translateX(-50%) scale(1.1);
 }
 
 .connection-point.top::after,
@@ -435,7 +457,7 @@ body {
 }
 
 .modal-content {
-    background-color: white;
+    background-color: var(--figma-surface);
     padding: 30px;
     border-radius: 12px;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
@@ -445,7 +467,7 @@ body {
 
 .modal-content h2 {
     margin: 0 0 25px 0;
-    color: #333;
+    color: var(--figma-text);
     font-size: 1.4em;
     display: flex;
     align-items: center;
@@ -459,7 +481,7 @@ body {
 .modal-field label {
     display: block;
     margin-bottom: 8px;
-    color: #555;
+    color: var(--figma-text-secondary);
     font-size: 0.9em;
     font-weight: 500;
 }
@@ -467,20 +489,20 @@ body {
 .modal-content input {
     width: 100%;
     padding: 10px;
-    border: 2px solid #e0e0e0;
+    border: 2px solid var(--figma-border);
     border-radius: 6px;
     font-size: 1em;
     transition: border-color 0.2s;
 }
 
 .modal-content input:focus {
-    border-color: #4CAF50;
+    border-color: var(--figma-blue);
     outline: none;
 }
 
 .video-sequence {
-    background-color: #f8f8f8;
-    border: 1px solid #e0e0e0;
+    background-color: var(--figma-surface);
+    border: 1px solid var(--figma-border);
     border-radius: 6px;
     padding: 12px;
     max-height: 150px;
@@ -509,12 +531,12 @@ body {
 }
 
 #cancelSave {
-    background-color: #f0f0f0;
-    color: #333;
+    background-color: var(--figma-surface);
+    color: var(--figma-text);
 }
 
 #confirmSave {
-    background-color: #4CAF50;
+    background-color: var(--figma-blue);
     color: white;
 }
 
@@ -524,7 +546,7 @@ body {
 }
 
 #confirmSave:hover {
-    background-color: #45a049;
+    background-color: var(--figma-hover);
     transform: translateY(-1px);
 }
 
@@ -538,24 +560,20 @@ body {
 }
 
 .transition-texts {
-    position: absolute;
-    background: rgba(0, 0, 0, 0.8);
-    border-radius: 8px;
-    padding: 10px;
+    background: var(--figma-surface);
+    border: 1px solid var(--figma-border);
+    border-radius: var(--figma-radius);
+    box-shadow: var(--figma-shadow);
+    padding: 12px;
     min-width: 200px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    backdrop-filter: blur(5px);
-    z-index: 1000;
-    pointer-events: auto;
+    backdrop-filter: blur(10px);
 }
 
 .transition-line {
     display: flex;
     align-items: center;
     gap: 8px;
-    margin: 5px 0;
-    padding: 5px;
+    padding: 8px;
     border-radius: 4px;
     transition: background-color 0.2s;
 }
@@ -565,12 +583,12 @@ body {
 }
 
 .transition-text {
-    color: white;
+    color: var(--figma-text);
     min-width: 100px;
-    padding: 4px 8px;
+    padding: 6px 10px;
     border-radius: 4px;
-    outline: none;
-    transition: background-color 0.2s;
+    font-size: 13px;
+    line-height: 1.4;
 }
 
 .transition-text:hover {
@@ -579,105 +597,43 @@ body {
 
 .transition-text:focus {
     background: rgba(255, 255, 255, 0.1);
+    outline: 2px solid var(--figma-blue);
+    outline-offset: -2px;
 }
 
 .link-button {
-    background: none;
-    border: none;
-    color: white;
-    opacity: 0.5;
-    cursor: pointer;
-    padding: 4px;
+    background: transparent;
+    border: 1px solid var(--figma-border);
+    color: var(--figma-text-secondary);
+    padding: 6px;
     border-radius: 4px;
+    cursor: pointer;
     transition: all 0.2s;
+    font-size: 12px;
 }
 
 .link-button:hover {
-    opacity: 0.8;
-    background: rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--figma-text);
+    border-color: rgba(255, 255, 255, 0.2);
 }
 
 .link-button.active {
-    opacity: 1;
-    background: rgba(255, 255, 255, 0.15);
+    background: var(--figma-blue);
+    color: white;
+    border-color: var(--figma-blue);
 }
 
 .link-info {
-    color: #4CAF50;
-    font-size: 0.9em;
-    display: none;
-}
-
-.transition-texts-wrapper {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-}
-
-.transition-text-container {
-    position: fixed;
-    display: flex;
-    flex-direction: column;
-    background: rgba(0, 0, 0, 0.9);
-    border-radius: 8px;
-    z-index: 1000;
-    transform-origin: center center;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    min-width: 200px;
-}
-
-.transition-header {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 8px;
-    background: rgba(255, 255, 255, 0.05);
-    border-radius: 8px 8px 0 0;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-    cursor: move;
-}
-
-.header-label {
-    color: white;
-    font-size: 14px;
-    font-weight: 500;
-    flex-grow: 1;
-    text-align: center;
-}
-
-.toggle-transition-text {
-    background: none;
-    border: none;
-    color: #999;
-    cursor: pointer;
-    padding: 4px;
+    color: var(--figma-blue);
     font-size: 12px;
-    border-radius: 4px;
-    transition: all 0.2s;
-    width: 24px;
-    height: 24px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    opacity: 0.8;
 }
 
-.toggle-transition-text:hover {
-    background: rgba(255, 255, 255, 0.1);
-    color: white;
-}
-
-.transition-content {
-    padding: 12px;
-    transition: all 0.3s ease;
-    max-height: 500px;
-    overflow: hidden;
-}
-
-.transition-content.collapsed {
-    max-height: 0;
-    padding: 0 12px;
-    opacity: 0;
+/* Style en mode liaison */
+body.linking .scene-node:hover {
+    outline: 2px solid var(--figma-blue);
+    outline-offset: 2px;
 }
 
 .transition-texts-wrapper {
@@ -701,10 +657,9 @@ body {
 }
 
 .link-node-button {
-    background: none;
-    border: none;
-    color: #666;
-    cursor: pointer;
+    background: transparent;
+    border: 1px solid var(--figma-border);
+    color: var(--figma-text-secondary);
     padding: 4px;
     font-size: 14px;
     border-radius: 50%;
@@ -720,19 +675,19 @@ body {
 
 .link-node-button:hover {
     background: rgba(255, 255, 255, 0.1);
-    color: white;
+    color: var(--figma-text);
     opacity: 1;
 }
 
 .link-node-button.linking {
     background: rgba(76, 175, 80, 0.2);
-    color: #4CAF50;
+    color: var(--figma-blue);
     opacity: 1;
     animation: pulse 1s infinite;
 }
 
 .link-node-button.linked {
-    color: #4CAF50;
+    color: var(--figma-blue);
     opacity: 1;
     background: rgba(76, 175, 80, 0.1);
 }
@@ -756,7 +711,7 @@ body {
 }
 
 .link-destination {
-    color: #4CAF50;
+    color: var(--figma-blue);
     font-size: 14px;
     opacity: 0;
     transition: all 0.3s;
@@ -772,20 +727,19 @@ body {
 .linking-mode .scene-node {
     cursor: pointer !important;
     transition: all 0.2s;
-    outline: 2px dashed #4CAF50;
+    outline: 2px dashed var(--figma-blue);
     outline-offset: 4px;
 }
 
 .linking-mode .scene-node:hover {
     transform: scale(1.05);
-    outline: 2px solid #4CAF50;
+    outline: 2px solid var(--figma-blue);
 }
 
 .delete-transition-text {
-    background: none;
-    border: none;
-    color: #666;
-    cursor: pointer;
+    background: transparent;
+    border: 1px solid var(--figma-border);
+    color: var(--figma-text-secondary);
     padding: 4px;
     font-size: 12px;
     border-radius: 50%;
@@ -794,10 +748,99 @@ body {
 
 .delete-transition-text:hover {
     background: rgba(255, 255, 255, 0.1);
-    color: white;
+    color: var(--figma-text);
 }
 
 body.linking .scene-node:hover {
-    outline: 2px solid #4CAF50;
+    outline: 2px solid var(--figma-blue);
     cursor: pointer;
+}
+
+.transition-text-container {
+    position: fixed;
+    display: flex;
+    flex-direction: column;
+    background: var(--figma-surface);
+    border-radius: var(--figma-radius);
+    z-index: 1000;
+    transform-origin: center center;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    border: 1px solid var(--figma-border);
+    min-width: 200px;
+}
+
+.transition-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: var(--figma-radius) var(--figma-radius) 0 0;
+    border-bottom: 1px solid var(--figma-border);
+    cursor: move;
+}
+
+.header-label {
+    color: var(--figma-text);
+    font-size: 14px;
+    font-weight: 500;
+    flex-grow: 1;
+    text-align: center;
+}
+
+.toggle-transition-text {
+    background: transparent;
+    border: 1px solid var(--figma-border);
+    color: var(--figma-text-secondary);
+    padding: 4px;
+    font-size: 12px;
+    border-radius: 4px;
+    transition: all 0.2s;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.toggle-transition-text:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--figma-text);
+}
+
+.transition-content {
+    padding: 12px;
+    transition: all 0.3s ease;
+    max-height: 500px;
+    overflow: hidden;
+}
+
+.transition-content.collapsed {
+    max-height: 0;
+    padding: 0 12px;
+    opacity: 0;
+}
+
+.transition-texts-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--figma-bg);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--figma-surface);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #484848;
 }
