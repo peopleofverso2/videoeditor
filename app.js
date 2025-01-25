@@ -328,10 +328,95 @@ document.addEventListener('DOMContentLoaded', function() {
                     const textContainer = document.createElement('div');
                     textContainer.className = 'transition-text-container';
                     
-                    const textElement = document.createElement('div');
-                    textElement.className = 'transition-text';
-                    textElement.contentEditable = true;
-                    textElement.innerHTML = 'Texte';
+                    const textLines = ['Ligne 1', 'Ligne 2', 'Ligne 3'].map(defaultText => {
+                        const lineContainer = document.createElement('div');
+                        lineContainer.className = 'transition-line-container';
+
+                        const line = document.createElement('div');
+                        line.className = 'transition-text';
+                        line.contentEditable = true;
+                        line.innerHTML = defaultText;
+
+                        const linkInfo = document.createElement('div');
+                        linkInfo.className = 'link-info';
+                        
+                        const linkButton = document.createElement('button');
+                        linkButton.className = 'link-node-button';
+                        linkButton.innerHTML = '🔗';
+                        linkButton.title = 'Lier à un nœud';
+                        
+                        const linkDestination = document.createElement('span');
+                        linkDestination.className = 'link-destination';
+                        linkInfo.appendChild(linkButton);
+                        linkInfo.appendChild(linkDestination);
+                        
+                        let linkedNodeId = null;
+                        
+                        const updateLinkInfo = (nodeId) => {
+                            linkedNodeId = nodeId;
+                            if (nodeId) {
+                                const node = document.getElementById(nodeId);
+                                if (node) {
+                                    const nodeLabel = node.querySelector('.node-label');
+                                    const nodeName = nodeLabel ? nodeLabel.textContent : node.id;
+                                    linkButton.classList.add('linked');
+                                    linkDestination.textContent = `→ ${nodeName}`;
+                                    linkDestination.style.opacity = '1';
+                                    linkButton.title = `Lié à ${nodeName}`;
+                                }
+                            } else {
+                                linkButton.classList.remove('linked');
+                                linkDestination.textContent = '';
+                                linkDestination.style.opacity = '0';
+                                linkButton.title = 'Lier à un nœud';
+                            }
+                        };
+                        
+                        linkButton.onclick = (e) => {
+                            e.stopPropagation();
+                            
+                            // Désactiver tous les autres boutons de lien
+                            document.querySelectorAll('.link-node-button').forEach(btn => {
+                                btn.classList.remove('linking');
+                            });
+                            
+                            // Si on était déjà en train de lier ce bouton
+                            if (linkButton.classList.contains('linking')) {
+                                linkButton.classList.remove('linking');
+                                document.body.classList.remove('linking-mode');
+                            } else {
+                                // Activer le mode lien
+                                linkButton.classList.add('linking');
+                                document.body.classList.add('linking-mode');
+                                
+                                // Gestionnaire pour cliquer sur un nœud
+                                const handleNodeClick = (event) => {
+                                    const node = event.target.closest('.scene-node');
+                                    if (node) {
+                                        event.stopPropagation();
+                                        console.log('Nœud sélectionné:', node.id);
+                                        updateLinkInfo(node.id);
+                                        
+                                        // Désactiver le mode lien
+                                        linkButton.classList.remove('linking');
+                                        document.body.classList.remove('linking-mode');
+                                        document.removeEventListener('click', handleNodeClick);
+                                    }
+                                };
+                                
+                                document.addEventListener('click', handleNodeClick);
+                            }
+                        };
+                        
+                        lineContainer.appendChild(line);
+                        lineContainer.appendChild(linkInfo);
+                        
+                        return { container: lineContainer, line, linkButton, getLinkedNodeId: () => linkedNodeId };
+                    });
+                    
+                    const textsWrapper = document.createElement('div');
+                    textsWrapper.className = 'transition-texts-wrapper';
+                    textLines.forEach(({container}) => textsWrapper.appendChild(container));
                     
                     const deleteButton = document.createElement('button');
                     deleteButton.className = 'delete-transition-text';
@@ -345,7 +430,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         }
                     };
                     
-                    textContainer.appendChild(textElement);
+                    textContainer.appendChild(textsWrapper);
                     textContainer.appendChild(deleteButton);
                     document.body.appendChild(textContainer);
 
@@ -388,7 +473,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         source: startNode.id,
                         target: endNode.id,
                         line: line,
-                        textElement: textElement,
+                        textElement: textsWrapper,
                         updateTextPosition: updateTextPosition
                     };
 
@@ -559,7 +644,7 @@ document.addEventListener('DOMContentLoaded', function() {
             if (next) {
                 // Afficher le texte de transition si présent
                 console.log('Texte de transition:', next.textElement?.textContent);
-                if (next.textElement && next.textElement.textContent.trim()) {
+                if (next.textElement && Array.from(next.textElement.children).some(lineContainer => lineContainer.querySelector('.transition-text').textContent.trim())) {
                     // Cacher la vidéo mais garder le fond noir
                     console.log('Fondu de la vidéo...');
                     fullscreenVideo.style.opacity = '0';
@@ -568,7 +653,57 @@ document.addEventListener('DOMContentLoaded', function() {
                     
                     // Afficher le texte
                     console.log('Affichage du texte...');
-                    fullscreenText.textContent = next.textElement.textContent;
+                    fullscreenText.innerHTML = '';
+                    Array.from(next.textElement.children).forEach(lineContainer => {
+                        const line = lineContainer.querySelector('.transition-text');
+                        const linkButton = lineContainer.querySelector('.link-node-button');
+                        
+                        if (line.textContent.trim()) {
+                            const fullscreenLine = document.createElement('div');
+                            fullscreenLine.className = 'fullscreen-text-line';
+                            fullscreenLine.textContent = line.textContent;
+                            
+                            // Rendre la ligne cliquable
+                            fullscreenLine.style.cursor = 'pointer';
+                            fullscreenLine.addEventListener('mouseenter', () => {
+                                fullscreenLine.classList.add('hover');
+                            });
+                            fullscreenLine.addEventListener('mouseleave', () => {
+                                fullscreenLine.classList.remove('hover');
+                            });
+                            fullscreenLine.addEventListener('click', async () => {
+                                // Cacher le texte immédiatement
+                                fullscreenText.style.opacity = '0';
+                                fullscreenText.style.display = 'none';
+                                
+                                // Récupérer le nœud lié à cette ligne
+                                const linkedNodeId = linkButton.linkedNodeId;
+                                console.log('ID du nœud lié:', linkedNodeId);
+                                const targetNodeId = linkedNodeId || next.target;
+                                console.log('ID du nœud cible:', targetNodeId);
+                                
+                                // Démarrer la vidéo liée ou la suivante par défaut
+                                const nextNode = document.getElementById(targetNodeId);
+                                if (nextNode) {
+                                    console.log('Lecture du nœud:', nextNode.id);
+                                    const nextVideo = nextNode.querySelector('video');
+                                    if (nextVideo) {
+                                        fullscreenVideo.src = nextVideo.src;
+                                        fullscreenVideo.currentTime = 0;
+                                        fullscreenVideo.style.display = 'block';
+                                        await fullscreenVideo.play();
+                                        fullscreenVideo.style.opacity = '1';
+                                        
+                                        // Continuer la séquence depuis ce nœud
+                                        await playSequence(nextNode);
+                                    }
+                                }
+                            });
+                            
+                            fullscreenText.appendChild(fullscreenLine);
+                        }
+                    });
+                    
                     fullscreenText.style.display = 'flex';
                     fullscreenText.style.opacity = '1';
                     
@@ -593,7 +728,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         fullscreenVideo.currentTime = 0;
                         
                         // Si pas de texte, transition instantanée
-                        if (!next.textElement || !next.textElement.textContent.trim()) {
+                        if (!next.textElement || !Array.from(next.textElement.children).some(lineContainer => lineContainer.querySelector('.transition-text').textContent.trim())) {
                             fullscreenVideo.style.display = 'block';
                             fullscreenVideo.style.opacity = '1';
                         } else {
@@ -775,7 +910,14 @@ document.addEventListener('DOMContentLoaded', function() {
             const savedConnections = connections.map(conn => ({
                 source: conn.source,
                 target: conn.target,
-                text: conn.textElement ? conn.textElement.textContent : ''
+                lines: Array.from(conn.textElement.children).map(container => {
+                    const line = container.querySelector('.transition-text');
+                    const linkButton = container.querySelector('.link-node-button');
+                    return {
+                        text: line.textContent,
+                        linkedNodeId: linkButton.linkedNodeId || null
+                    };
+                })
             }));
 
             console.log('Sauvegarde des connexions:', savedConnections);
@@ -920,10 +1062,94 @@ document.addEventListener('DOMContentLoaded', function() {
                     const textContainer = document.createElement('div');
                     textContainer.className = 'transition-text-container';
                     
-                    const textElement = document.createElement('div');
-                    textElement.className = 'transition-text';
-                    textElement.contentEditable = true;
-                    textElement.innerHTML = conn.text;
+                    const textLines = conn.lines.map(lineData => {
+                        const lineContainer = document.createElement('div');
+                        lineContainer.className = 'transition-line-container';
+
+                        const line = document.createElement('div');
+                        line.className = 'transition-text';
+                        line.contentEditable = true;
+                        line.innerHTML = lineData.text;
+
+                        const linkInfo = document.createElement('div');
+                        linkInfo.className = 'link-info';
+                        
+                        const linkButton = document.createElement('button');
+                        linkButton.className = 'link-node-button';
+                        linkButton.innerHTML = '🔗';
+                        
+                        const linkDestination = document.createElement('span');
+                        linkDestination.className = 'link-destination';
+                        linkInfo.appendChild(linkButton);
+                        linkInfo.appendChild(linkDestination);
+                        
+                        let linkedNodeId = lineData.linkedNodeId;
+                        
+                        const updateLinkInfo = (nodeId) => {
+                            linkedNodeId = nodeId;
+                            if (nodeId) {
+                                const node = document.getElementById(nodeId);
+                                if (node) {
+                                    const nodeLabel = node.querySelector('.node-label');
+                                    const nodeName = nodeLabel ? nodeLabel.textContent : node.id;
+                                    linkButton.classList.add('linked');
+                                    linkDestination.textContent = `→ ${nodeName}`;
+                                    linkDestination.style.opacity = '1';
+                                    linkButton.title = `Lié à ${nodeName}`;
+                                }
+                            } else {
+                                linkButton.classList.remove('linked');
+                                linkDestination.textContent = '';
+                                linkDestination.style.opacity = '0';
+                                linkButton.title = 'Lier à un nœud';
+                            }
+                        };
+                        
+                        linkButton.onclick = (e) => {
+                            e.stopPropagation();
+                            
+                            // Désactiver tous les autres boutons de lien
+                            document.querySelectorAll('.link-node-button').forEach(btn => {
+                                btn.classList.remove('linking');
+                            });
+                            
+                            // Si on était déjà en train de lier ce bouton
+                            if (linkButton.classList.contains('linking')) {
+                                linkButton.classList.remove('linking');
+                                document.body.classList.remove('linking-mode');
+                            } else {
+                                // Activer le mode lien
+                                linkButton.classList.add('linking');
+                                document.body.classList.add('linking-mode');
+                                
+                                // Gestionnaire pour cliquer sur un nœud
+                                const handleNodeClick = (event) => {
+                                    const node = event.target.closest('.scene-node');
+                                    if (node) {
+                                        event.stopPropagation();
+                                        console.log('Nœud sélectionné:', node.id);
+                                        updateLinkInfo(node.id);
+                                        
+                                        // Désactiver le mode lien
+                                        linkButton.classList.remove('linking');
+                                        document.body.classList.remove('linking-mode');
+                                        document.removeEventListener('click', handleNodeClick);
+                                    }
+                                };
+                                
+                                document.addEventListener('click', handleNodeClick);
+                            }
+                        };
+                        
+                        lineContainer.appendChild(line);
+                        lineContainer.appendChild(linkInfo);
+                        
+                        return { container: lineContainer, line, linkButton };
+                    });
+                    
+                    const textsWrapper = document.createElement('div');
+                    textsWrapper.className = 'transition-texts-wrapper';
+                    textLines.forEach(({container}) => textsWrapper.appendChild(container));
                     
                     const deleteButton = document.createElement('button');
                     deleteButton.className = 'delete-transition-text';
@@ -937,7 +1163,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         }
                     };
                     
-                    textContainer.appendChild(textElement);
+                    textContainer.appendChild(textsWrapper);
                     textContainer.appendChild(deleteButton);
                     document.body.appendChild(textContainer);
 
@@ -980,7 +1206,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         source: conn.source,
                         target: conn.target,
                         line: line,
-                        textElement: textElement,
+                        textElement: textsWrapper,
                         updateTextPosition: updateTextPosition
                     };
 
