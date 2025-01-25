@@ -704,9 +704,25 @@ document.addEventListener('DOMContentLoaded', function() {
                     fullscreenText.style.display = 'flex';
                     fullscreenText.style.opacity = '1';
                     
-                    // Attendre 2 secondes
-                    console.log('Attente...');
-                    await new Promise(resolve => setTimeout(resolve, 2000));
+                    // Attendre en fonction du mode de lecture
+                    const controls = document.querySelector('.playback-controls');
+                    const playPauseBtn = controls.querySelector('.play-pause');
+                    const autoPlay = controls.querySelector('.auto-play').classList.contains('active');
+
+                    if (autoPlay) {
+                        // Lecture automatique après 2 secondes
+                        await new Promise(resolve => setTimeout(resolve, 2000));
+                    } else {
+                        // Attendre le clic sur le bouton de lecture
+                        playPauseBtn.textContent = '⏵';
+                        await new Promise(resolve => {
+                            const onClick = () => {
+                                playPauseBtn.removeEventListener('click', onClick);
+                                resolve();
+                            };
+                            playPauseBtn.addEventListener('click', onClick);
+                        });
+                    }
                     
                     // Cacher le texte
                     console.log('Disparition du texte...');
@@ -770,6 +786,29 @@ document.addEventListener('DOMContentLoaded', function() {
         isPlaying = false;
         currentNode = null;
     }
+
+    // Créer les éléments de contrôle
+    const controls = document.createElement('div');
+    controls.className = 'playback-controls';
+    controls.innerHTML = `
+        <button class="control-button play-pause" title="Lecture/Pause">⏵</button>
+        <button class="control-button auto-play" title="Lecture automatique">🔄</button>
+    `;
+    document.body.appendChild(controls);
+
+    // État de la lecture automatique
+    let autoPlay = true;
+
+    // Gérer le bouton de lecture automatique
+    const autoPlayBtn = controls.querySelector('.auto-play');
+    autoPlayBtn.onclick = () => {
+        autoPlay = !autoPlay;
+        autoPlayBtn.classList.toggle('active');
+    };
+
+    // État de la lecture
+    let isWaitingForNext = false;
+    const playPauseBtn = controls.querySelector('.play-pause');
 
     function updateGraphSize() {
         // Trouver les limites des nœuds
