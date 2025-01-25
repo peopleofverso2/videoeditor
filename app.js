@@ -354,8 +354,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 endPlug: 'arrow3',
                 gradient: true,
                 dropShadow: true,
-                endPlugSize: 1.5,
-                startPlugSize: 1,
+                endPlugSize: 2.5,  // Flèche plus grosse
+                startPlugSize: 1.2,  // Point de départ légèrement plus gros
                 dash: false
             }
         );
