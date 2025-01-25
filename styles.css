@@ -892,3 +892,90 @@ body.linking .scene-node:hover {
 .theme-toggle:hover {
     background: var(--figma-surface);
 }
+
+/* Styles pour la modal des raccourcis */
+.modal-shortcuts {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-shortcuts.show {
+    display: flex;
+}
+
+.modal-shortcuts-content {
+    background: var(--figma-surface);
+    border-radius: var(--figma-radius);
+    padding: 24px;
+    margin: auto;
+    width: 90%;
+    max-width: 500px;
+    box-shadow: var(--figma-shadow);
+}
+
+.modal-shortcuts h2 {
+    margin-bottom: 20px;
+    color: var(--figma-text);
+}
+
+.shortcuts-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.shortcut-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: var(--figma-text-secondary);
+}
+
+kbd {
+    background: var(--figma-bg);
+    border: 1px solid var(--figma-border);
+    border-radius: 4px;
+    padding: 2px 6px;
+    font-family: monospace;
+    color: var(--figma-text);
+}
+
+.modal-shortcuts-close {
+    margin-top: 20px;
+    padding: 8px 16px;
+    background: var(--figma-blue);
+    color: white;
+    border: none;
+    border-radius: var(--figma-radius);
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+
+.modal-shortcuts-close:hover {
+    background: var(--figma-hover);
+}
+
+.help-button {
+    background: none;
+    border: none;
+    color: var(--figma-text);
+    cursor: pointer;
+    padding: 8px;
+    border-radius: var(--figma-radius);
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    transition: background 0.2s ease;
+}
+
+.help-button:hover {
+    background: var(--figma-surface);
+}

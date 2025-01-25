@@ -14,6 +14,7 @@
             <input type="file" id="fileInput" accept="video/*" multiple style="display: none;">
             <button onclick="document.getElementById('fileInput').click()">📁 Ajouter des vidéos</button>
             <button class="theme-toggle" id="themeToggle">🌙</button>
+            <button class="help-button" id="helpButton">⌨️ Raccourcis</button>
         </div>
 
         <div id="workspace">
@@ -29,6 +30,40 @@
         </div>
         <div class="copyright">
             2025 @peopleofverso • v1.1.0
+        </div>
+    </div>
+    
+    <!-- Modal des raccourcis -->
+    <div id="shortcutsModal" class="modal">
+        <div class="modal-content">
+            <h2>Raccourcis Clavier</h2>
+            <div class="shortcuts-list">
+                <div class="shortcut-item">
+                    <kbd>Delete</kbd>
+                    <span>Supprimer le nœud sélectionné</span>
+                </div>
+                <div class="shortcut-item">
+                    <kbd>Ctrl</kbd> + <kbd>+</kbd>
+                    <span>Zoom avant</span>
+                </div>
+                <div class="shortcut-item">
+                    <kbd>Ctrl</kbd> + <kbd>-</kbd>
+                    <span>Zoom arrière</span>
+                </div>
+                <div class="shortcut-item">
+                    <kbd>Ctrl</kbd> + <kbd>0</kbd>
+                    <span>Réinitialiser le zoom</span>
+                </div>
+                <div class="shortcut-item">
+                    <kbd>Ctrl</kbd> + <kbd>S</kbd>
+                    <span>Sauvegarder le projet</span>
+                </div>
+                <div class="shortcut-item">
+                    <kbd>Espace</kbd>
+                    <span>Lecture/Pause de la vidéo sélectionnée</span>
+                </div>
+            </div>
+            <button class="modal-close">Fermer</button>
         </div>
     </div>
 

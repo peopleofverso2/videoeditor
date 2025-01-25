@@ -1293,6 +1293,87 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
+    // Système de raccourcis clavier
+    const shortcuts = {
+        // Suppression
+        'Delete': (e) => {
+            if (currentNode) {
+                deleteNode(currentNode);
+                currentNode = null;
+            }
+        },
+        
+        // Zoom
+        'ctrl+equal': (e) => {
+            e.preventDefault();
+            currentZoom = Math.min(currentZoom * 1.1, 2);
+            updateZoom();
+        },
+        'ctrl+minus': (e) => {
+            e.preventDefault();
+            currentZoom = Math.max(currentZoom / 1.1, 0.5);
+            updateZoom();
+        },
+        'ctrl+0': (e) => {
+            e.preventDefault();
+            currentZoom = 1;
+            updateZoom();
+        },
+        
+        // Sauvegarde
+        'ctrl+s': (e) => {
+            e.preventDefault();
+            saveProject();
+        },
+        
+        // Lecture/Pause
+        'Space': (e) => {
+            e.preventDefault();
+            if (currentNode) {
+                const video = currentNode.querySelector('video');
+                if (video) {
+                    if (video.paused) video.play();
+                    else video.pause();
+                }
+            }
+        }
+    };
+
+    // Gestionnaire de raccourcis
+    const handleShortcut = (e) => {
+        const key = [
+            e.ctrlKey ? 'ctrl+' : '',
+            e.key.toLowerCase()
+        ].join('');
+
+        // Vérifier si un raccourci existe pour cette combinaison de touches
+        if (shortcuts[key] || shortcuts[e.key]) {
+            const shortcut = shortcuts[key] || shortcuts[e.key];
+            shortcut(e);
+        }
+    };
+
+    // Modal des raccourcis
+    const modal = document.getElementById('shortcutsModal');
+    const helpButton = document.getElementById('helpButton');
+    const closeButton = modal.querySelector('.modal-close');
+
+    helpButton.addEventListener('click', () => modal.classList.add('show'));
+    closeButton.addEventListener('click', () => modal.classList.remove('show'));
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) modal.classList.remove('show');
+    });
+    
+    // Fermeture avec Escape
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && modal.classList.contains('show')) {
+            modal.classList.remove('show');
+            e.preventDefault();
+            return;
+        }
+        handleShortcut(e);
+    });
+
     // Annuler la connexion avec Escape
     document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape') {
