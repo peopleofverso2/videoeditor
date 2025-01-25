@@ -454,8 +454,8 @@ document.addEventListener('DOMContentLoaded', function() {
             startPoint,
             endPoint,
             {
-                color: '#18A0FB',  // Couleur Figma
-                size: 4,
+                color: '#18A0FB',
+                size: 2,
                 path: 'straight',
                 startSocket: startPoint.classList.contains('top') ? 'bottom' : 'top',
                 endSocket: endPoint.classList.contains('top') ? 'bottom' : 'top',
@@ -468,13 +468,13 @@ document.addEventListener('DOMContentLoaded', function() {
                     blur: 3,
                     color: 'rgba(0, 0, 0, 0.2)'
                 },
-                endPlugSize: 3.5,
-                startPlugSize: 1.5,
+                endPlugSize: 2,
+                startPlugSize: 1,
                 dash: false,
                 endPlugOutline: false,
                 startPlugOutline: false,
-                endPlugOffset: 30,
-                startPlugOffset: 5
+                endPlugOffset: 20,
+                startPlugOffset: 3
             }
         );
 
@@ -482,7 +482,7 @@ document.addEventListener('DOMContentLoaded', function() {
         line.setOptions({size: 0});
         setTimeout(() => {
             line.setOptions({
-                size: 4,
+                size: 2,
                 duration: 500,
                 animOptions: {timing: 'ease-out'}
             });
