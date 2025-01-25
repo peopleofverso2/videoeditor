@@ -1293,13 +1293,70 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
+    // Système de copier/coller de nœuds
+    let clipboard = null;
+    let selectedNode = null;
+
+    function selectNode(node) {
+        // Désélectionner le nœud précédent
+        if (selectedNode) {
+            selectedNode.classList.remove('selected');
+        }
+        
+        // Sélectionner le nouveau nœud
+        selectedNode = node;
+        if (selectedNode) {
+            selectedNode.classList.add('selected');
+        }
+    }
+
+    function copyNode() {
+        if (!selectedNode) return;
+        
+        const video = selectedNode.querySelector('video');
+        clipboard = {
+            videoSrc: video.src,
+            filename: selectedNode.querySelector('.title').textContent,
+            position: {
+                x: parseInt(selectedNode.style.left) + 50, // Décalage pour la nouvelle position
+                y: parseInt(selectedNode.style.top) + 50
+            }
+        };
+    }
+
+    async function pasteNode() {
+        if (!clipboard) return;
+        
+        try {
+            // Créer un blob à partir de l'URL de la vidéo
+            const response = await fetch(clipboard.videoSrc);
+            const blob = await response.blob();
+            
+            // Créer un fichier à partir du blob
+            const file = new File([blob], clipboard.filename, { type: blob.type });
+            
+            // Créer le nœud
+            createSceneNode(file, clipboard.position.x, clipboard.position.y);
+            
+        } catch (error) {
+            console.error('Erreur lors du collage:', error);
+        }
+    }
+
+    // Ajouter les gestionnaires d'événements pour la sélection
+    document.addEventListener('click', (e) => {
+        const node = e.target.closest('.scene-node');
+        selectNode(node);
+    });
+
     // Système de raccourcis clavier
     const shortcuts = {
         // Suppression
         'Delete': (e) => {
-            if (currentNode) {
-                deleteNode(currentNode);
-                currentNode = null;
+            if (selectedNode) {
+                e.preventDefault();
+                deleteNode(selectedNode);
+                selectedNode = null;
             }
         },
         
@@ -1335,6 +1392,59 @@ document.addEventListener('DOMContentLoaded', function() {
                     if (video.paused) video.play();
                     else video.pause();
                 }
+            }
+        },
+        
+        // Copier/Coller
+        'ctrl+c': (e) => {
+            e.preventDefault();
+            copyNode();
+        },
+        'ctrl+v': (e) => {
+            e.preventDefault();
+            pasteNode();
+        },
+        
+        // Supprimer avec Delete ou Backspace
+        'Backspace': (e) => {
+            if (selectedNode) {
+                e.preventDefault();
+                deleteNode(selectedNode);
+                selectedNode = null;
+            }
+        },
+        
+        // Sélection avec les flèches
+        'ArrowLeft': (e) => {
+            if (selectedNode) {
+                e.preventDefault();
+                const left = parseInt(selectedNode.style.left) - 10;
+                selectedNode.style.left = `${left}px`;
+                updateConnections();
+            }
+        },
+        'ArrowRight': (e) => {
+            if (selectedNode) {
+                e.preventDefault();
+                const left = parseInt(selectedNode.style.left) + 10;
+                selectedNode.style.left = `${left}px`;
+                updateConnections();
+            }
+        },
+        'ArrowUp': (e) => {
+            if (selectedNode) {
+                e.preventDefault();
+                const top = parseInt(selectedNode.style.top) - 10;
+                selectedNode.style.top = `${top}px`;
+                updateConnections();
+            }
+        },
+        'ArrowDown': (e) => {
+            if (selectedNode) {
+                e.preventDefault();
+                const top = parseInt(selectedNode.style.top) + 10;
+                selectedNode.style.top = `${top}px`;
+                updateConnections();
             }
         }
     };

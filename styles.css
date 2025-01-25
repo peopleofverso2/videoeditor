@@ -200,7 +200,7 @@ body {
     border: 1px solid var(--figma-border);
     border-radius: var(--figma-radius);
     box-shadow: var(--figma-shadow);
-    transition: all 0.2s ease;
+    transition: all 0.2s ease, box-shadow 0.2s ease;
     width: 300px;
     min-width: 200px;
     max-width: 800px;
@@ -216,6 +216,14 @@ body {
 
 .scene-node.playing {
     box-shadow: 0 0 0 2px var(--figma-blue);
+}
+
+.scene-node:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.scene-node.selected {
+    box-shadow: 0 0 0 2px #18A0FB, 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 .video-container {
