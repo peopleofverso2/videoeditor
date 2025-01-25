@@ -291,235 +291,86 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function handleConnection(point) {
-        if (!activePoint) {
-            activePoint = point;
-            point.classList.add('active');
-        } else if (activePoint !== point) {
-            const startPoint = activePoint.classList.contains('bottom') ? activePoint : point;
-            const endPoint = activePoint.classList.contains('bottom') ? point : activePoint;
+        if (activePoint) {
+            // Vérifier si on essaie de connecter un point à lui-même
+            if (activePoint === point) {
+                activePoint.classList.remove('active');
+                activePoint = null;
+                return;
+            }
 
-            if (startPoint.classList.contains('bottom') && endPoint.classList.contains('top')) {
-                const startNode = startPoint.closest('.scene-node');
-                const endNode = endPoint.closest('.scene-node');
+            // Vérifier si les points sont compatibles (un top avec un bottom)
+            const startIsTop = activePoint.classList.contains('top');
+            const endIsTop = point.classList.contains('top');
+            if (startIsTop === endIsTop) {
+                activePoint.classList.remove('active');
+                activePoint = null;
+                return;
+            }
 
-                if (startNode !== endNode) {
-                    // Supprimer les connexions existantes depuis le point de départ
-                    connections = connections.filter(conn => {
-                        if (conn.source === startNode.id) {
-                            if (conn.textElement) {
-                                conn.textElement.remove();
-                            }
-                            conn.line.remove();
-                            return false;
-                        }
-                        return true;
-                    });
+            // Déterminer le point de départ et d'arrivée
+            const startPoint = startIsTop ? point : activePoint;
+            const endPoint = startIsTop ? activePoint : point;
 
-                    // Créer la nouvelle connexion
-                    const line = new LeaderLine(startPoint, endPoint, {
-                        color: '#4CAF50',
-                        size: 2,
-                        path: 'straight',
-                        startSocket: 'bottom',
-                        endSocket: 'top'
-                    });
+            // Récupérer les nœuds parent
+            const startNode = startPoint.closest('.scene-node');
+            const endNode = endPoint.closest('.scene-node');
 
-                    // Créer l'élément de texte
-                    const textContainer = document.createElement('div');
-                    textContainer.className = 'transition-text-container';
-                    
-                    const header = document.createElement('div');
-                    header.className = 'transition-header';
-                    
-                    const toggleButton = document.createElement('button');
-                    toggleButton.className = 'toggle-transition-text';
-                    toggleButton.innerHTML = '▼';
-                    toggleButton.title = 'Replier/Déplier';
-                    
-                    const headerLabel = document.createElement('div');
-                    headerLabel.className = 'header-label';
-                    headerLabel.textContent = 'Textes de transition';
-                    
-                    const deleteButton = document.createElement('button');
-                    deleteButton.className = 'delete-transition-text';
-                    deleteButton.innerHTML = '❌';
-                    deleteButton.onclick = (e) => {
-                        e.stopPropagation();
-                        textContainer.remove();
-                        const conn = connections.find(c => c.source === startNode.id);
-                        if (conn) {
-                            conn.textElement = null;
-                        }
-                    };
-                    
-                    header.appendChild(toggleButton);
-                    header.appendChild(headerLabel);
-                    header.appendChild(deleteButton);
-                    
-                    const content = document.createElement('div');
-                    content.className = 'transition-content';
-                    
-                    toggleButton.onclick = (e) => {
-                        e.stopPropagation();
-                        const isCollapsed = content.classList.toggle('collapsed');
-                        toggleButton.innerHTML = isCollapsed ? '▶' : '▼';
-                        updateTextPosition(); // Mettre à jour la position après l'animation
-                    };
-                    
-                    const textLines = ['Ligne 1', 'Ligne 2', 'Ligne 3'].map(defaultText => {
-                        const lineContainer = document.createElement('div');
-                        lineContainer.className = 'transition-line-container';
+            // Vérifier si une connexion existe déjà
+            const existingConnection = connections.find(conn => 
+                conn.source === startNode.id && conn.target === endNode.id);
 
-                        const line = document.createElement('div');
-                        line.className = 'transition-text';
-                        line.contentEditable = true;
-                        line.innerHTML = defaultText;
-
-                        const linkInfo = document.createElement('div');
-                        linkInfo.className = 'link-info';
-                        
-                        const linkButton = document.createElement('button');
-                        linkButton.className = 'link-node-button';
-                        linkButton.innerHTML = '🔗';
-                        linkButton.title = 'Lier à un nœud';
-                        
-                        const linkDestination = document.createElement('span');
-                        linkDestination.className = 'link-destination';
-                        linkInfo.appendChild(linkButton);
-                        linkInfo.appendChild(linkDestination);
-                        
-                        let linkedNodeId = null;
-                        
-                        const updateLinkInfo = (nodeId) => {
-                            linkedNodeId = nodeId;
-                            lineContainer.dataset.linkedNodeId = nodeId || '';
-                            if (nodeId) {
-                                const node = document.getElementById(nodeId);
-                                if (node) {
-                                    const nodeLabel = node.querySelector('.node-label');
-                                    const nodeName = nodeLabel ? nodeLabel.textContent : node.id;
-                                    linkButton.classList.add('linked');
-                                    linkDestination.textContent = `→ ${nodeName}`;
-                                    linkDestination.style.opacity = '1';
-                                    linkButton.title = `Lié à ${nodeName}`;
-                                }
-                            } else {
-                                linkButton.classList.remove('linked');
-                                linkDestination.textContent = '';
-                                linkDestination.style.opacity = '0';
-                                linkButton.title = 'Lier à un nœud';
-                            }
-                        };
-                        
-                        linkButton.onclick = (e) => {
-                            e.stopPropagation();
-                            
-                            // Désactiver tous les autres boutons de lien
-                            document.querySelectorAll('.link-node-button').forEach(btn => {
-                                btn.classList.remove('linking');
-                            });
-                            
-                            // Si on était déjà en train de lier ce bouton
-                            if (linkButton.classList.contains('linking')) {
-                                linkButton.classList.remove('linking');
-                                document.body.classList.remove('linking-mode');
-                            } else {
-                                // Activer le mode lien
-                                linkButton.classList.add('linking');
-                                document.body.classList.add('linking-mode');
-                                
-                                // Gestionnaire pour cliquer sur un nœud
-                                const handleNodeClick = (event) => {
-                                    const node = event.target.closest('.scene-node');
-                                    if (node) {
-                                        event.stopPropagation();
-                                        console.log('Nœud sélectionné:', node.id);
-                                        updateLinkInfo(node.id);
-                                        
-                                        // Désactiver le mode lien
-                                        linkButton.classList.remove('linking');
-                                        document.body.classList.remove('linking-mode');
-                                        document.removeEventListener('click', handleNodeClick);
-                                    }
-                                };
-                                
-                                document.addEventListener('click', handleNodeClick);
-                            }
-                        };
-                        
-                        lineContainer.appendChild(line);
-                        lineContainer.appendChild(linkInfo);
-                        
-                        return { 
-                            container: lineContainer, 
-                            line, 
-                            linkButton, 
-                            getLinkedNodeId: () => linkedNodeId,
-                            updateLinkInfo  // Exposer la fonction pour le chargement
-                        };
-                    });
-                    
-                    const textsWrapper = document.createElement('div');
-                    textsWrapper.className = 'transition-texts-wrapper';
-                    textLines.forEach(({container}) => textsWrapper.appendChild(container));
-                    
-                    content.appendChild(textsWrapper);
-                    textContainer.appendChild(header);
-                    textContainer.appendChild(content);
-                    document.body.appendChild(textContainer);
-
-                    // Positionner le texte au milieu de la ligne
-                    const updateTextPosition = () => {
-                        const startRect = startPoint.getBoundingClientRect();
-                        const endRect = endPoint.getBoundingClientRect();
-                        
-                        // Calculer le point central de la ligne
-                        const centerX = (startRect.left + endRect.left) / 2 + startRect.width / 2;
-                        const centerY = startRect.bottom + (endRect.top - startRect.bottom) / 2;
-                        
-                        // Ajuster la position pour centrer le texte
-                        const containerRect = textContainer.getBoundingClientRect();
-                        const left = centerX - containerRect.width / 2;
-                        const top = centerY - containerRect.height / 2;
-                        
-                        // Appliquer la position avec une transformation pour plus de fluidité
-                        textContainer.style.transform = `translate(${left}px, ${top}px)`;
-                        textContainer.style.left = '0';
-                        textContainer.style.top = '0';
-                    };
-
-                    // Mettre à jour la position plus fréquemment
-                    const updateLoop = () => {
-                        if (textContainer.isConnected) {
-                            updateTextPosition();
-                            requestAnimationFrame(updateLoop);
-                        }
-                    };
-                    updateLoop();
-
-                    // Observer les changements de taille
-                    const resizeObserver = new ResizeObserver(() => {
-                        updateTextPosition();
-                    });
-                    resizeObserver.observe(textContainer);
-
-                    const connection = {
-                        source: startNode.id,
-                        target: endNode.id,
-                        line: line,
-                        textElement: textsWrapper,
-                        textLines: textLines, // Stocker les objets textLines
-                        updateTextPosition: updateTextPosition
-                    };
-
-                    connections.push(connection);
-                }
+            if (!existingConnection) {
+                const line = createConnection(startPoint, endPoint);
+                
+                connections.push({
+                    source: startNode.id,
+                    target: endNode.id,
+                    line: line,
+                    startPoint: startPoint,
+                    endPoint: endPoint
+                });
             }
 
             activePoint.classList.remove('active');
-            point.classList.remove('active');
             activePoint = null;
+        } else {
+            activePoint = point;
+            activePoint.classList.add('active');
         }
+    }
+
+    function createConnection(startPoint, endPoint) {
+        const line = new LeaderLine(
+            startPoint,
+            endPoint,
+            {
+                color: '#4CAF50',
+                size: 3,
+                path: 'straight',
+                startSocket: startPoint.classList.contains('top') ? 'bottom' : 'top',
+                endSocket: endPoint.classList.contains('top') ? 'bottom' : 'top',
+                startPlug: 'disc',
+                endPlug: 'arrow3',
+                gradient: true,
+                dropShadow: true,
+                endPlugSize: 1.5,
+                startPlugSize: 1,
+                dash: false
+            }
+        );
+
+        // Animation d'apparition
+        line.setOptions({size: 0});
+        setTimeout(() => {
+            line.setOptions({
+                size: 3,
+                duration: 500,
+                animOptions: {timing: 'ease-out'}
+            });
+        }, 0);
+
+        return line;
     }
 
     function setupDeleteButton(node) {
