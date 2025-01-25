@@ -1,4 +1,30 @@
+// Theme management
+const initTheme = () => {
+    const savedTheme = localStorage.getItem('theme') || 'dark';
+    document.documentElement.setAttribute('data-theme', savedTheme);
+    updateThemeButton(savedTheme);
+};
+
+const toggleTheme = () => {
+    const currentTheme = document.documentElement.getAttribute('data-theme');
+    const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+    document.documentElement.setAttribute('data-theme', newTheme);
+    localStorage.setItem('theme', newTheme);
+    updateThemeButton(newTheme);
+};
+
+const updateThemeButton = (theme) => {
+    const button = document.getElementById('themeToggle');
+    button.textContent = theme === 'light' ? '🌙' : '☀️';
+};
+
 document.addEventListener('DOMContentLoaded', function() {
+    // Initialize theme
+    initTheme();
+    
+    // Theme toggle listener
+    document.getElementById('themeToggle').addEventListener('click', toggleTheme);
+
     // Variables globales
     let connections = [];
     let activePoint = null;
