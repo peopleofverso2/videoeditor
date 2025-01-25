@@ -322,13 +322,13 @@ document.addEventListener('DOMContentLoaded', function() {
 
             if (!existingConnection) {
                 const line = createConnection(startPoint, endPoint);
+                const text = createTransitionText(startNode, endNode);
                 
                 connections.push({
                     source: startNode.id,
                     target: endNode.id,
                     line: line,
-                    startPoint: startPoint,
-                    endPoint: endPoint
+                    text: text
                 });
             }
 
@@ -338,6 +338,115 @@ document.addEventListener('DOMContentLoaded', function() {
             activePoint = point;
             activePoint.classList.add('active');
         }
+    }
+
+    function createTransitionText(startNode, endNode) {
+        // Créer le conteneur principal
+        const textContainer = document.createElement('div');
+        textContainer.className = 'transition-texts';
+        zoomContainer.appendChild(textContainer);
+
+        // Créer la ligne de texte par défaut
+        const textLine = document.createElement('div');
+        textLine.className = 'transition-line';
+        textContainer.appendChild(textLine);
+
+        // Zone de texte éditable
+        const textInput = document.createElement('div');
+        textInput.className = 'transition-text';
+        textInput.contentEditable = true;
+        textInput.innerHTML = 'Cliquez pour éditer';
+        textLine.appendChild(textInput);
+
+        // Bouton de liaison
+        const linkButton = document.createElement('button');
+        linkButton.className = 'link-button';
+        linkButton.innerHTML = '🔗';
+        linkButton.title = 'Lier à un nœud';
+        textLine.appendChild(linkButton);
+
+        // Info de liaison
+        const linkInfo = document.createElement('div');
+        linkInfo.className = 'link-info';
+        textLine.appendChild(linkInfo);
+
+        // Fonction de mise à jour de la position
+        function updatePosition() {
+            const startRect = startNode.getBoundingClientRect();
+            const endRect = endNode.getBoundingClientRect();
+            
+            const midX = (startRect.left + endRect.left) / 2 + (startRect.width / 2);
+            const midY = startRect.bottom + (endRect.top - startRect.bottom) / 2;
+            
+            textContainer.style.position = 'absolute';
+            textContainer.style.left = `${midX}px`;
+            textContainer.style.top = `${midY}px`;
+            textContainer.style.transform = 'translate(-50%, -50%)';
+        }
+
+        // Gestionnaire de liaison
+        let isLinking = false;
+        linkButton.onclick = (e) => {
+            e.stopPropagation();
+            
+            if (isLinking) {
+                // Annuler le mode liaison
+                isLinking = false;
+                linkButton.classList.remove('active');
+                document.body.classList.remove('linking');
+            } else {
+                // Activer le mode liaison
+                isLinking = true;
+                linkButton.classList.add('active');
+                document.body.classList.add('linking');
+
+                // Gestionnaire de clic sur les nœuds
+                const handleNodeClick = (event) => {
+                    const targetNode = event.target.closest('.scene-node');
+                    if (targetNode && targetNode !== startNode && targetNode !== endNode) {
+                        // Mettre à jour l'info de liaison
+                        const video = targetNode.querySelector('video');
+                        const title = video ? video.getAttribute('data-title') || 'Sans titre' : 'Sans titre';
+                        linkInfo.textContent = `→ ${title}`;
+                        linkInfo.style.display = 'block';
+                        
+                        // Stocker l'ID du nœud lié
+                        textLine.dataset.linkedNodeId = targetNode.id;
+                        
+                        // Désactiver le mode liaison
+                        isLinking = false;
+                        linkButton.classList.remove('active');
+                        document.body.classList.remove('linking');
+                        document.removeEventListener('click', handleNodeClick);
+                    }
+                };
+
+                document.addEventListener('click', handleNodeClick);
+            }
+        };
+
+        // Observer les changements de position
+        const observer = new MutationObserver(updatePosition);
+        observer.observe(startNode, { attributes: true });
+        observer.observe(endNode, { attributes: true });
+
+        // Mettre à jour lors du scroll et du redimensionnement
+        window.addEventListener('scroll', updatePosition);
+        window.addEventListener('resize', updatePosition);
+
+        // Position initiale
+        updatePosition();
+
+        return {
+            element: textContainer,
+            updatePosition,
+            destroy: () => {
+                observer.disconnect();
+                window.removeEventListener('scroll', updatePosition);
+                window.removeEventListener('resize', updatePosition);
+                textContainer.remove();
+            }
+        };
     }
 
     function createConnection(startPoint, endPoint) {

@@ -537,28 +537,81 @@ body {
     z-index: 50;
 }
 
-.transition-texts-wrapper {
+.transition-texts {
+    position: absolute;
+    background: rgba(0, 0, 0, 0.8);
+    border-radius: 8px;
+    padding: 10px;
+    min-width: 200px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(5px);
+    z-index: 1000;
+    pointer-events: auto;
+}
+
+.transition-line {
     display: flex;
-    flex-direction: column;
+    align-items: center;
     gap: 8px;
+    margin: 5px 0;
+    padding: 5px;
+    border-radius: 4px;
+    transition: background-color 0.2s;
+}
+
+.transition-line:hover {
+    background: rgba(255, 255, 255, 0.05);
 }
 
 .transition-text {
     color: white;
-    font-family: "Helvetica Neue", sans-serif;
-    font-weight: 300;
-    font-size: 16px;
     min-width: 100px;
-    text-align: center;
-    cursor: text;
-    margin: 0;
-    padding: 0;
+    padding: 4px 8px;
+    border-radius: 4px;
+    outline: none;
+    transition: background-color 0.2s;
+}
+
+.transition-text:hover {
+    background: rgba(255, 255, 255, 0.05);
 }
 
 .transition-text:focus {
-    outline: none;
     background: rgba(255, 255, 255, 0.1);
-    border-radius: 2px;
+}
+
+.link-button {
+    background: none;
+    border: none;
+    color: white;
+    opacity: 0.5;
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 4px;
+    transition: all 0.2s;
+}
+
+.link-button:hover {
+    opacity: 0.8;
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.link-button.active {
+    opacity: 1;
+    background: rgba(255, 255, 255, 0.15);
+}
+
+.link-info {
+    color: #4CAF50;
+    font-size: 0.9em;
+    display: none;
+}
+
+.transition-texts-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
 }
 
 .transition-text-container {
@@ -742,4 +795,9 @@ body {
 .delete-transition-text:hover {
     background: rgba(255, 255, 255, 0.1);
     color: white;
+}
+
+body.linking .scene-node:hover {
+    outline: 2px solid #4CAF50;
+    cursor: pointer;
 }
