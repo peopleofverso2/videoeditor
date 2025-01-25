@@ -328,6 +328,44 @@ document.addEventListener('DOMContentLoaded', function() {
                     const textContainer = document.createElement('div');
                     textContainer.className = 'transition-text-container';
                     
+                    const header = document.createElement('div');
+                    header.className = 'transition-header';
+                    
+                    const toggleButton = document.createElement('button');
+                    toggleButton.className = 'toggle-transition-text';
+                    toggleButton.innerHTML = '▼';
+                    toggleButton.title = 'Replier/Déplier';
+                    
+                    const headerLabel = document.createElement('div');
+                    headerLabel.className = 'header-label';
+                    headerLabel.textContent = 'Textes de transition';
+                    
+                    const deleteButton = document.createElement('button');
+                    deleteButton.className = 'delete-transition-text';
+                    deleteButton.innerHTML = '❌';
+                    deleteButton.onclick = (e) => {
+                        e.stopPropagation();
+                        textContainer.remove();
+                        const conn = connections.find(c => c.source === startNode.id);
+                        if (conn) {
+                            conn.textElement = null;
+                        }
+                    };
+                    
+                    header.appendChild(toggleButton);
+                    header.appendChild(headerLabel);
+                    header.appendChild(deleteButton);
+                    
+                    const content = document.createElement('div');
+                    content.className = 'transition-content';
+                    
+                    toggleButton.onclick = (e) => {
+                        e.stopPropagation();
+                        const isCollapsed = content.classList.toggle('collapsed');
+                        toggleButton.innerHTML = isCollapsed ? '▶' : '▼';
+                        updateTextPosition(); // Mettre à jour la position après l'animation
+                    };
+                    
                     const textLines = ['Ligne 1', 'Ligne 2', 'Ligne 3'].map(defaultText => {
                         const lineContainer = document.createElement('div');
                         lineContainer.className = 'transition-line-container';
@@ -418,20 +456,9 @@ document.addEventListener('DOMContentLoaded', function() {
                     textsWrapper.className = 'transition-texts-wrapper';
                     textLines.forEach(({container}) => textsWrapper.appendChild(container));
                     
-                    const deleteButton = document.createElement('button');
-                    deleteButton.className = 'delete-transition-text';
-                    deleteButton.innerHTML = '❌';
-                    deleteButton.onclick = (e) => {
-                        e.stopPropagation();
-                        textContainer.remove();
-                        const conn = connections.find(c => c.source === startNode.id);
-                        if (conn) {
-                            conn.textElement = null;
-                        }
-                    };
-                    
-                    textContainer.appendChild(textsWrapper);
-                    textContainer.appendChild(deleteButton);
+                    content.appendChild(textsWrapper);
+                    textContainer.appendChild(header);
+                    textContainer.appendChild(content);
                     document.body.appendChild(textContainer);
 
                     // Positionner le texte au milieu de la ligne
@@ -1062,6 +1089,44 @@ document.addEventListener('DOMContentLoaded', function() {
                     const textContainer = document.createElement('div');
                     textContainer.className = 'transition-text-container';
                     
+                    const header = document.createElement('div');
+                    header.className = 'transition-header';
+                    
+                    const toggleButton = document.createElement('button');
+                    toggleButton.className = 'toggle-transition-text';
+                    toggleButton.innerHTML = '▼';
+                    toggleButton.title = 'Replier/Déplier';
+                    
+                    const headerLabel = document.createElement('div');
+                    headerLabel.className = 'header-label';
+                    headerLabel.textContent = 'Textes de transition';
+                    
+                    const deleteButton = document.createElement('button');
+                    deleteButton.className = 'delete-transition-text';
+                    deleteButton.innerHTML = '❌';
+                    deleteButton.onclick = (e) => {
+                        e.stopPropagation();
+                        textContainer.remove();
+                        const conn = connections.find(c => c.source === startNode.id);
+                        if (conn) {
+                            conn.textElement = null;
+                        }
+                    };
+                    
+                    header.appendChild(toggleButton);
+                    header.appendChild(headerLabel);
+                    header.appendChild(deleteButton);
+                    
+                    const content = document.createElement('div');
+                    content.className = 'transition-content';
+                    
+                    toggleButton.onclick = (e) => {
+                        e.stopPropagation();
+                        const isCollapsed = content.classList.toggle('collapsed');
+                        toggleButton.innerHTML = isCollapsed ? '▶' : '▼';
+                        updateTextPosition(); // Mettre à jour la position après l'animation
+                    };
+                    
                     const textLines = conn.lines.map(lineData => {
                         const lineContainer = document.createElement('div');
                         lineContainer.className = 'transition-line-container';
@@ -1151,20 +1216,9 @@ document.addEventListener('DOMContentLoaded', function() {
                     textsWrapper.className = 'transition-texts-wrapper';
                     textLines.forEach(({container}) => textsWrapper.appendChild(container));
                     
-                    const deleteButton = document.createElement('button');
-                    deleteButton.className = 'delete-transition-text';
-                    deleteButton.innerHTML = '❌';
-                    deleteButton.onclick = (e) => {
-                        e.stopPropagation();
-                        textContainer.remove();
-                        const conn = connections.find(c => c.source === startNode.id);
-                        if (conn) {
-                            conn.textElement = null;
-                        }
-                    };
-                    
-                    textContainer.appendChild(textsWrapper);
-                    textContainer.appendChild(deleteButton);
+                    content.appendChild(textsWrapper);
+                    textContainer.appendChild(header);
+                    textContainer.appendChild(content);
                     document.body.appendChild(textContainer);
 
                     // Positionner le texte au milieu de la ligne

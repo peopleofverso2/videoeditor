@@ -529,38 +529,87 @@ body {
 .transition-text-container {
     position: fixed;
     display: flex;
-    align-items: center;
-    gap: 8px;
-    background: black;
-    padding: 10px 15px;
-    border-radius: 4px;
+    flex-direction: column;
+    background: rgba(0, 0, 0, 0.9);
+    border-radius: 8px;
     z-index: 1000;
     transform-origin: center center;
-    pointer-events: auto;
-    will-change: transform;
     box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    min-width: 200px;
 }
 
-.delete-transition-text {
+.transition-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 8px 8px 0 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    cursor: move;
+}
+
+.header-label {
+    color: white;
+    font-size: 14px;
+    font-weight: 500;
+    flex-grow: 1;
+    text-align: center;
+}
+
+.toggle-transition-text {
     background: none;
     border: none;
-    color: #666;
+    color: #999;
     cursor: pointer;
     padding: 4px;
     font-size: 12px;
-    border-radius: 50%;
+    border-radius: 4px;
     transition: all 0.2s;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
-.delete-transition-text:hover {
+.toggle-transition-text:hover {
     background: rgba(255, 255, 255, 0.1);
     color: white;
+}
+
+.transition-content {
+    padding: 12px;
+    transition: all 0.3s ease;
+    max-height: 500px;
+    overflow: hidden;
+}
+
+.transition-content.collapsed {
+    max-height: 0;
+    padding: 0 12px;
+    opacity: 0;
+}
+
+.transition-texts-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
 }
 
 .transition-line-container {
     display: flex;
     align-items: center;
     gap: 8px;
+    opacity: 1;
+    transform: translateY(0);
+    transition: all 0.3s ease;
+}
+
+.collapsed .transition-line-container {
+    opacity: 0;
+    transform: translateY(-10px);
 }
 
 .link-node-button {
@@ -642,4 +691,20 @@ body {
 .linking-mode .scene-node:hover {
     transform: scale(1.05);
     outline: 2px solid #4CAF50;
+}
+
+.delete-transition-text {
+    background: none;
+    border: none;
+    color: #666;
+    cursor: pointer;
+    padding: 4px;
+    font-size: 12px;
+    border-radius: 50%;
+    transition: all 0.2s;
+}
+
+.delete-transition-text:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
 }
