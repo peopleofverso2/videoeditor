@@ -826,3 +826,113 @@ body {
 .control-group:hover .tooltip {
     opacity: 1;
 }
+
+.transition-text-block {
+    padding: 15px;
+    background: #1a1a1a;
+    border-radius: 8px;
+    margin-top: 10px;
+}
+
+.transition-text-title {
+    color: white;
+    font-size: 14px;
+    margin-bottom: 10px;
+    opacity: 0.7;
+}
+
+.transition-text-lines {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.transition-text-line-container {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.transition-text-input-group {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex: 1;
+    background: #2a2a2a;
+    border-radius: 4px;
+    padding: 4px 8px;
+}
+
+.transition-text {
+    flex: 1;
+    background: none;
+    border: none;
+    color: white;
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-size: 14px;
+    padding: 4px;
+    outline: none;
+}
+
+.transition-text::placeholder {
+    color: rgba(255, 255, 255, 0.3);
+}
+
+.link-node-button {
+    background: none;
+    border: none;
+    color: white;
+    opacity: 0.5;
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 4px;
+    transition: all 0.2s;
+}
+
+.link-node-button:hover {
+    opacity: 1;
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.link-node-button.active {
+    opacity: 1;
+    color: #4CAF50;
+    background: rgba(76, 175, 80, 0.2);
+}
+
+.transition-text-delete {
+    background: none;
+    border: none;
+    color: #ff4444;
+    opacity: 0.5;
+    cursor: pointer;
+    font-size: 18px;
+    padding: 4px;
+    border-radius: 4px;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.transition-text-delete:hover {
+    opacity: 1;
+    background: rgba(255, 68, 68, 0.1);
+}
+
+.transition-text-add {
+    background: none;
+    border: none;
+    color: #4CAF50;
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 4px;
+    margin-top: 8px;
+    width: 100%;
+    transition: all 0.2s;
+    font-size: 14px;
+}
+
+.transition-text-add:hover {
+    background: rgba(76, 175, 80, 0.1);
+}

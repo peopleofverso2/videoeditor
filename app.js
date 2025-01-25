@@ -1350,6 +1350,83 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 
+function createTransitionTextBlock() {
+    const textBlock = document.createElement('div');
+    textBlock.className = 'transition-text-block';
+
+    // Ajouter le titre
+    const title = document.createElement('div');
+    title.className = 'transition-text-title';
+    title.textContent = 'Textes de transition';
+    textBlock.appendChild(title);
+
+    // Ajouter le conteneur de lignes
+    const linesContainer = document.createElement('div');
+    linesContainer.className = 'transition-text-lines';
+    textBlock.appendChild(linesContainer);
+
+    // Ajouter une première ligne
+    addTextLine(linesContainer);
+
+    // Bouton pour ajouter une ligne
+    const addButton = document.createElement('button');
+    addButton.className = 'transition-text-add';
+    addButton.innerHTML = '+ Ajouter une ligne';
+    addButton.onclick = () => addTextLine(linesContainer);
+    textBlock.appendChild(addButton);
+
+    return textBlock;
+}
+
+function addTextLine(container) {
+    const lineContainer = document.createElement('div');
+    lineContainer.className = 'transition-text-line-container';
+
+    // Groupe texte + lien
+    const inputGroup = document.createElement('div');
+    inputGroup.className = 'transition-text-input-group';
+
+    // Input pour le texte
+    const textInput = document.createElement('input');
+    textInput.type = 'text';
+    textInput.className = 'transition-text';
+    textInput.placeholder = 'Texte de transition...';
+    inputGroup.appendChild(textInput);
+
+    // Sélecteur de nœud lié
+    const linkButton = document.createElement('button');
+    linkButton.className = 'link-node-button';
+    linkButton.innerHTML = '🔗';
+    linkButton.title = 'Lier à un nœud';
+    linkButton.onclick = () => {
+        // Activer le mode sélection
+        isLinking = true;
+        currentLinkingLine = lineContainer;
+        document.body.classList.add('linking-mode');
+        linkButton.classList.add('active');
+    };
+    inputGroup.appendChild(linkButton);
+
+    // Bouton de suppression
+    const deleteButton = document.createElement('button');
+    deleteButton.className = 'transition-text-delete';
+    deleteButton.innerHTML = '×';
+    deleteButton.title = 'Supprimer cette ligne';
+    deleteButton.onclick = () => {
+        if (container.children.length > 1) {
+            lineContainer.remove();
+        } else {
+            // Si c'est la dernière ligne, juste vider le texte
+            textInput.value = '';
+        }
+    };
+    inputGroup.appendChild(deleteButton);
+
+    lineContainer.appendChild(inputGroup);
+    container.appendChild(lineContainer);
+    textInput.focus();
+}
+
 function exportProject() {
     const nodes = Array.from(document.querySelectorAll('.scene-node')).map(node => {
         const video = node.querySelector('video');
