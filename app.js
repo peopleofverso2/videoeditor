@@ -468,8 +468,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 dash: false,
                 endPlugOutline: false,
                 startPlugOutline: false,
-                // Décaler la flèche pour éviter le chevauchement
-                endPlugOffset: 15,
+                endPlugOffset: 30,  // Augmenté à 30px
                 startPlugOffset: 5
             }
         );
