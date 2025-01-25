@@ -1358,16 +1358,43 @@ document.addEventListener('DOMContentLoaded', function() {
     const helpButton = document.getElementById('helpButton');
     const closeButton = modal.querySelector('.modal-close');
 
-    helpButton.addEventListener('click', () => modal.classList.add('show'));
-    closeButton.addEventListener('click', () => modal.classList.remove('show'));
+    // S'assurer que la modal est cachée au départ
+    modal.style.display = 'none';
+
+    helpButton.addEventListener('click', () => {
+        modal.style.display = 'flex';
+        // Petit délai pour permettre la transition
+        requestAnimationFrame(() => {
+            modal.classList.add('show');
+        });
+    });
+
+    const hideModal = () => {
+        modal.classList.remove('show');
+        // Attendre la fin de l'animation avant de cacher
+        setTimeout(() => {
+            modal.style.display = 'none';
+        }, 300);
+    };
+
+    closeButton.addEventListener('click', hideModal);
+    
+    // Fermer en cliquant en dehors
     modal.addEventListener('click', (e) => {
-        if (e.target === modal) modal.classList.remove('show');
+        if (e.target === modal) {
+            hideModal();
+        }
+    });
+
+    // Empêcher la propagation des clics dans le contenu
+    modal.querySelector('.modal-content').addEventListener('click', (e) => {
+        e.stopPropagation();
     });
     
-    // Fermeture avec Escape
+    // Gestionnaire de raccourcis et Escape
     document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape' && modal.classList.contains('show')) {
-            modal.classList.remove('show');
+            hideModal();
             e.preventDefault();
             return;
         }
