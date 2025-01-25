@@ -818,8 +818,16 @@ document.addEventListener('DOMContentLoaded', function() {
     const controls = document.createElement('div');
     controls.className = 'playback-controls';
     controls.innerHTML = `
-        <button class="control-button play-pause" title="Lecture/Pause">⏵</button>
-        <button class="control-button auto-play" title="Lecture automatique">🔄</button>
+        <div class="control-group">
+            <button class="control-button play-pause" title="Continuer la lecture">⏵</button>
+            <div class="tooltip">Continuer la lecture</div>
+        </div>
+        <div class="control-group">
+            <button class="control-button auto-play" title="Mode de lecture">🔄</button>
+            <div class="tooltip">Mode de lecture:<br>
+            ● Actif (vert) = enchainement automatique après 2s<br>
+            ● Inactif (gris) = pause sur les textes</div>
+        </div>
     `;
     document.body.appendChild(controls);
 
@@ -831,6 +839,14 @@ document.addEventListener('DOMContentLoaded', function() {
     autoPlayBtn.onclick = () => {
         autoPlay = !autoPlay;
         autoPlayBtn.classList.toggle('active');
+        
+        // Mettre à jour le tooltip du bouton de lecture
+        const playPauseTooltip = playPauseBtn.parentElement.querySelector('.tooltip');
+        if (autoPlay) {
+            playPauseTooltip.textContent = 'Continuer la lecture';
+        } else {
+            playPauseTooltip.textContent = 'Continuer la lecture (mode pause)';
+        }
     };
 
     // État de la lecture
