@@ -455,7 +455,7 @@ document.addEventListener('DOMContentLoaded', function() {
             endPoint,
             {
                 color: '#4CAF50',
-                size: 3,
+                size: 4,  // Ligne plus épaisse
                 path: 'straight',
                 startSocket: startPoint.classList.contains('top') ? 'bottom' : 'top',
                 endSocket: endPoint.classList.contains('top') ? 'bottom' : 'top',
@@ -463,8 +463,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 endPlug: 'arrow3',
                 gradient: true,
                 dropShadow: true,
-                endPlugSize: 2.5,  // Flèche plus grosse
-                startPlugSize: 1.2,  // Point de départ légèrement plus gros
+                endPlugSize: 3.5,  // Flèche beaucoup plus grosse
+                startPlugSize: 1.5,  // Point de départ plus gros aussi
                 dash: false
             }
         );
@@ -473,7 +473,7 @@ document.addEventListener('DOMContentLoaded', function() {
         line.setOptions({size: 0});
         setTimeout(() => {
             line.setOptions({
-                size: 3,
+                size: 4,  // Même taille que ci-dessus
                 duration: 500,
                 animOptions: {timing: 'ease-out'}
             });
