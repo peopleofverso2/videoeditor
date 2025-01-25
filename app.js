@@ -306,6 +306,9 @@ document.addEventListener('DOMContentLoaded', function() {
                     // Supprimer les connexions existantes depuis le point de départ
                     connections = connections.filter(conn => {
                         if (conn.source === startNode.id) {
+                            if (conn.textElement) {
+                                conn.textElement.remove();
+                            }
                             conn.line.remove();
                             return false;
                         }
@@ -321,10 +324,72 @@ document.addEventListener('DOMContentLoaded', function() {
                         endSocket: 'top'
                     });
 
+                    // Créer l'élément de texte
+                    const textContainer = document.createElement('div');
+                    textContainer.className = 'transition-text-container';
+                    
+                    const textElement = document.createElement('div');
+                    textElement.className = 'transition-text';
+                    textElement.contentEditable = true;
+                    textElement.innerHTML = 'Texte';
+                    
+                    const deleteButton = document.createElement('button');
+                    deleteButton.className = 'delete-transition-text';
+                    deleteButton.innerHTML = '❌';
+                    deleteButton.onclick = (e) => {
+                        e.stopPropagation();
+                        textContainer.remove();
+                        const conn = connections.find(c => c.source === startNode.id);
+                        if (conn) {
+                            conn.textElement = null;
+                        }
+                    };
+                    
+                    textContainer.appendChild(textElement);
+                    textContainer.appendChild(deleteButton);
+                    document.body.appendChild(textContainer);
+
+                    // Positionner le texte au milieu de la ligne
+                    const updateTextPosition = () => {
+                        const startRect = startPoint.getBoundingClientRect();
+                        const endRect = endPoint.getBoundingClientRect();
+                        
+                        // Calculer le point central de la ligne
+                        const centerX = (startRect.left + endRect.left) / 2 + startRect.width / 2;
+                        const centerY = startRect.bottom + (endRect.top - startRect.bottom) / 2;
+                        
+                        // Ajuster la position pour centrer le texte
+                        const containerRect = textContainer.getBoundingClientRect();
+                        const left = centerX - containerRect.width / 2;
+                        const top = centerY - containerRect.height / 2;
+                        
+                        // Appliquer la position avec une transformation pour plus de fluidité
+                        textContainer.style.transform = `translate(${left}px, ${top}px)`;
+                        textContainer.style.left = '0';
+                        textContainer.style.top = '0';
+                    };
+
+                    // Mettre à jour la position plus fréquemment
+                    const updateLoop = () => {
+                        if (textContainer.isConnected) {
+                            updateTextPosition();
+                            requestAnimationFrame(updateLoop);
+                        }
+                    };
+                    updateLoop();
+
+                    // Observer les changements de taille
+                    const resizeObserver = new ResizeObserver(() => {
+                        updateTextPosition();
+                    });
+                    resizeObserver.observe(textContainer);
+
                     const connection = {
                         source: startNode.id,
                         target: endNode.id,
-                        line: line
+                        line: line,
+                        textElement: textElement,
+                        updateTextPosition: updateTextPosition
                     };
 
                     connections.push(connection);
@@ -439,12 +504,20 @@ document.addEventListener('DOMContentLoaded', function() {
         await playSequence(node);
     }
 
+    // Créer un conteneur pour le plein écran
+    const fullscreenContainer = document.createElement('div');
+    fullscreenContainer.className = 'fullscreen-container';
+    document.body.appendChild(fullscreenContainer);
+
     // Ajouter un élément vidéo dédié au plein écran
     const fullscreenVideo = document.createElement('video');
-    fullscreenVideo.style.display = 'none';
-    fullscreenVideo.style.width = '100%';
-    fullscreenVideo.style.height = '100%';
-    document.body.appendChild(fullscreenVideo);
+    fullscreenVideo.className = 'fullscreen-video';
+    fullscreenContainer.appendChild(fullscreenVideo);
+
+    // Créer un élément pour le texte en plein écran
+    const fullscreenText = document.createElement('div');
+    fullscreenText.className = 'fullscreen-text';
+    fullscreenContainer.appendChild(fullscreenText);
 
     async function playSequence(node) {
         console.log('Lecture du nœud:', node.id);
@@ -461,10 +534,12 @@ document.addEventListener('DOMContentLoaded', function() {
             fullscreenVideo.currentTime = 0;
             
             // Démarrer la vidéo en plein écran
+            fullscreenContainer.style.display = 'block';
             fullscreenVideo.style.display = 'block';
+            fullscreenVideo.style.opacity = '1';
             await fullscreenVideo.play();
             try {
-                await fullscreenVideo.requestFullscreen();
+                await fullscreenContainer.requestFullscreen();
             } catch (e) {
                 console.log('Erreur plein écran, on continue:', e);
             }
@@ -482,17 +557,61 @@ document.addEventListener('DOMContentLoaded', function() {
             console.log('Prochaine connexion trouvée:', next);
 
             if (next) {
+                // Afficher le texte de transition si présent
+                console.log('Texte de transition:', next.textElement?.textContent);
+                if (next.textElement && next.textElement.textContent.trim()) {
+                    // Cacher la vidéo mais garder le fond noir
+                    console.log('Fondu de la vidéo...');
+                    fullscreenVideo.style.opacity = '0';
+                    await new Promise(resolve => setTimeout(resolve, 500));
+                    fullscreenVideo.style.display = 'none';
+                    
+                    // Afficher le texte
+                    console.log('Affichage du texte...');
+                    fullscreenText.textContent = next.textElement.textContent;
+                    fullscreenText.style.display = 'flex';
+                    fullscreenText.style.opacity = '1';
+                    
+                    // Attendre 2 secondes
+                    console.log('Attente...');
+                    await new Promise(resolve => setTimeout(resolve, 2000));
+                    
+                    // Cacher le texte
+                    console.log('Disparition du texte...');
+                    fullscreenText.style.opacity = '0';
+                    await new Promise(resolve => setTimeout(resolve, 500));
+                    fullscreenText.style.display = 'none';
+                }
+
                 const nextNode = document.getElementById(next.target);
                 if (nextNode) {
                     console.log('Lecture du prochain nœud');
-                    await playSequence(nextNode);
+                    // Préparer la prochaine vidéo
+                    const nextVideo = nextNode.querySelector('video');
+                    if (nextVideo) {
+                        fullscreenVideo.src = nextVideo.src;
+                        fullscreenVideo.currentTime = 0;
+                        
+                        // Si pas de texte, transition instantanée
+                        if (!next.textElement || !next.textElement.textContent.trim()) {
+                            fullscreenVideo.style.display = 'block';
+                            fullscreenVideo.style.opacity = '1';
+                        } else {
+                            // Sinon, fondu normal
+                            fullscreenVideo.style.display = 'block';
+                            await fullscreenVideo.play();
+                            fullscreenVideo.style.opacity = '1';
+                        }
+                        
+                        await playSequence(nextNode);
+                    }
                 }
             }
 
             // Si c'est la dernière vidéo ou s'il n'y a pas de suivante
             if (!next) {
                 console.log('Fin de la séquence');
-                fullscreenVideo.style.display = 'none';
+                fullscreenContainer.style.display = 'none';
                 if (document.fullscreenElement) {
                     await document.exitFullscreen();
                 }
@@ -500,7 +619,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         } catch (error) {
             console.error('Erreur:', error);
-            fullscreenVideo.style.display = 'none';
+            fullscreenContainer.style.display = 'none';
             if (document.fullscreenElement) {
                 await document.exitFullscreen();
             }
@@ -509,17 +628,15 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function stopSequence() {
-        console.log('Arrêt de la séquence');
+        if (fullscreenVideo) {
+            fullscreenVideo.pause();
+            fullscreenContainer.style.display = 'none';
+            if (document.fullscreenElement) {
+                document.exitFullscreen();
+            }
+        }
         isPlaying = false;
-        
-        fullscreenVideo.pause();
-        fullscreenVideo.currentTime = 0;
-        fullscreenVideo.style.display = 'none';
-        
-        document.querySelectorAll('.scene-node video').forEach(video => {
-            video.pause();
-            video.currentTime = 0;
-        });
+        currentNode = null;
     }
 
     function updateGraphSize() {
@@ -657,7 +774,8 @@ document.addEventListener('DOMContentLoaded', function() {
             // Récupérer les connexions
             const savedConnections = connections.map(conn => ({
                 source: conn.source,
-                target: conn.target
+                target: conn.target,
+                text: conn.textElement ? conn.textElement.textContent : ''
             }));
 
             console.log('Sauvegarde des connexions:', savedConnections);
@@ -798,11 +916,75 @@ document.addEventListener('DOMContentLoaded', function() {
                         endSocket: 'top'
                     });
 
-                    connections.push({
+                    // Créer l'élément de texte
+                    const textContainer = document.createElement('div');
+                    textContainer.className = 'transition-text-container';
+                    
+                    const textElement = document.createElement('div');
+                    textElement.className = 'transition-text';
+                    textElement.contentEditable = true;
+                    textElement.innerHTML = conn.text;
+                    
+                    const deleteButton = document.createElement('button');
+                    deleteButton.className = 'delete-transition-text';
+                    deleteButton.innerHTML = '❌';
+                    deleteButton.onclick = (e) => {
+                        e.stopPropagation();
+                        textContainer.remove();
+                        const conn = connections.find(c => c.source === startNode.id);
+                        if (conn) {
+                            conn.textElement = null;
+                        }
+                    };
+                    
+                    textContainer.appendChild(textElement);
+                    textContainer.appendChild(deleteButton);
+                    document.body.appendChild(textContainer);
+
+                    // Positionner le texte au milieu de la ligne
+                    const updateTextPosition = () => {
+                        const startRect = startPoint.getBoundingClientRect();
+                        const endRect = endPoint.getBoundingClientRect();
+                        
+                        // Calculer le point central de la ligne
+                        const centerX = (startRect.left + endRect.left) / 2 + startRect.width / 2;
+                        const centerY = startRect.bottom + (endRect.top - startRect.bottom) / 2;
+                        
+                        // Ajuster la position pour centrer le texte
+                        const containerRect = textContainer.getBoundingClientRect();
+                        const left = centerX - containerRect.width / 2;
+                        const top = centerY - containerRect.height / 2;
+                        
+                        // Appliquer la position avec une transformation pour plus de fluidité
+                        textContainer.style.transform = `translate(${left}px, ${top}px)`;
+                        textContainer.style.left = '0';
+                        textContainer.style.top = '0';
+                    };
+
+                    // Mettre à jour la position plus fréquemment
+                    const updateLoop = () => {
+                        if (textContainer.isConnected) {
+                            updateTextPosition();
+                            requestAnimationFrame(updateLoop);
+                        }
+                    };
+                    updateLoop();
+
+                    // Observer les changements de taille
+                    const resizeObserver = new ResizeObserver(() => {
+                        updateTextPosition();
+                    });
+                    resizeObserver.observe(textContainer);
+
+                    const connection = {
                         source: conn.source,
                         target: conn.target,
-                        line: line
-                    });
+                        line: line,
+                        textElement: textElement,
+                        updateTextPosition: updateTextPosition
+                    };
+
+                    connections.push(connection);
                 }
             }
 
