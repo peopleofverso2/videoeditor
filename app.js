@@ -1051,6 +1051,50 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
+    async function exportProject() {
+        try {
+            // Créer un nouvel objet ZIP
+            const zip = new JSZip();
+            
+            // Ajouter les métadonnées du projet
+            const projectData = {
+                nodes: nodes.map(node => ({
+                    id: node.id,
+                    videoFile: node.videoFile.name,
+                    position: node.position,
+                    connections: node.connections
+                }))
+            };
+            zip.file("project.json", JSON.stringify(projectData, null, 2));
+            
+            // Ajouter les fichiers vidéo
+            for (const node of nodes) {
+                zip.file(`videos/${node.videoFile.name}`, node.videoFile);
+            }
+            
+            // Générer le fichier ZIP
+            const content = await zip.generateAsync({type: "blob"});
+            
+            // Créer un lien de téléchargement
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(content);
+            link.download = "projet-video-interactif.zip";
+            
+            // Déclencher le téléchargement
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            
+            // Nettoyer l'URL
+            URL.revokeObjectURL(link.href);
+            
+            alert("Projet exporté avec succès !");
+        } catch (error) {
+            console.error("Erreur lors de l'export :", error);
+            alert("Erreur lors de l'export du projet. Veuillez réessayer.");
+        }
+    }
+
     async function loadProject(e) {
         const file = e.target.files[0];
         if (!file) return;
