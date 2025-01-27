@@ -40,6 +40,26 @@ async function saveBase64ToFile(base64Data, outputPath) {
 // Map pour stocker les fichiers temporaires par session
 const tempFiles = new Map();
 
+// Fonction pour découper le texte en lignes de largeur similaire
+function wrapText(ctx, text, maxWidth) {
+    const words = text.split(' ');
+    const lines = [];
+    let currentLine = words[0];
+
+    for (let i = 1; i < words.length; i++) {
+        const word = words[i];
+        const width = ctx.measureText(currentLine + ' ' + word).width;
+        if (width < maxWidth) {
+            currentLine += ' ' + word;
+        } else {
+            lines.push(currentLine);
+            currentLine = word;
+        }
+    }
+    lines.push(currentLine);
+    return lines;
+}
+
 // Route pour démarrer une nouvelle session d'export
 app.post('/export/start', (req, res) => {
     const sessionId = Date.now().toString();
@@ -142,20 +162,29 @@ app.post('/export/finish/:sessionId', async (req, res) => {
                     ctx.fillStyle = 'black';
                     ctx.fillRect(0, 0, 1920, 1080);
                     
-                    // Texte blanc centré
+                    // Configuration du texte
                     ctx.fillStyle = 'white';
-                    ctx.font = '72px Arial';
+                    ctx.font = 'bold 120px Arial';
                     ctx.textAlign = 'center';
                     ctx.textBaseline = 'middle';
                     
-                    // Séparer le texte en lignes
-                    const lines = transitionText.split(' ');
-                    const lineHeight = 100;
-                    const totalHeight = lines.length * lineHeight;
-                    let y = (1080 - totalHeight) / 2 + lineHeight / 2;
+                    // Créer les trois lignes
+                    const lines = [
+                        'Ligne 1',
+                        'Ligne 2',
+                        'Ligne 3'
+                    ];
                     
+                    // Calculer la hauteur totale du texte
+                    const lineHeight = 300;  // Grand espacement vertical
+                    const totalHeight = lines.length * lineHeight;
+                    
+                    // Position verticale de départ (centré)
+                    let y = (canvas.height - totalHeight) / 2 + lineHeight / 2;
+                    
+                    // Dessiner chaque ligne
                     lines.forEach(line => {
-                        ctx.fillText(line, 1920/2, y);
+                        ctx.fillText(line, canvas.width / 2, y);
                         y += lineHeight;
                     });
                     
