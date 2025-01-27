@@ -1473,29 +1473,165 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
+    // Fonction pour convertir une vidéo en base64
+    async function videoToBase64(videoElement) {
+        return new Promise((resolve, reject) => {
+            const canvas = document.createElement('canvas');
+            canvas.width = videoElement.videoWidth;
+            canvas.height = videoElement.videoHeight;
+            const ctx = canvas.getContext('2d');
+            
+            // Attendre que la vidéo soit chargée
+            if (videoElement.readyState >= 2) {
+                const mediaRecorder = new MediaRecorder(videoElement.captureStream());
+                const chunks = [];
+
+                mediaRecorder.ondataavailable = (e) => chunks.push(e.data);
+                mediaRecorder.onstop = () => {
+                    const blob = new Blob(chunks, { type: 'video/mp4' });
+                    const reader = new FileReader();
+                    reader.onloadend = () => resolve(reader.result);
+                    reader.onerror = reject;
+                    reader.readAsDataURL(blob);
+                };
+
+                mediaRecorder.start();
+                videoElement.play();
+                videoElement.onended = () => mediaRecorder.stop();
+            } else {
+                videoElement.onloadeddata = () => {
+                    const mediaRecorder = new MediaRecorder(videoElement.captureStream());
+                    const chunks = [];
+
+                    mediaRecorder.ondataavailable = (e) => chunks.push(e.data);
+                    mediaRecorder.onstop = () => {
+                        const blob = new Blob(chunks, { type: 'video/mp4' });
+                        const reader = new FileReader();
+                        reader.onloadend = () => resolve(reader.result);
+                        reader.onerror = reject;
+                        reader.readAsDataURL(blob);
+                    };
+
+                    mediaRecorder.start();
+                    videoElement.play();
+                    videoElement.onended = () => mediaRecorder.stop();
+                };
+            }
+        });
+    }
+
+    // Fonction pour obtenir les transitions
+    function getTransitions() {
+        const transitions = [];
+        
+        // Trier les connexions dans l'ordre
+        const orderedConnections = [];
+        let currentNodeId = null;
+        
+        // Trouver le premier nœud (celui qui n'a pas de connexion entrante)
+        const allNodeIds = new Set(connections.map(c => c.target));
+        const startNodeId = connections.find(c => !allNodeIds.has(c.source))?.source;
+        
+        console.log('Premier nœud:', startNodeId);
+        currentNodeId = startNodeId;
+        
+        // Parcourir les connexions dans l'ordre
+        while (currentNodeId) {
+            const nextConnection = connections.find(c => c.source === currentNodeId);
+            if (nextConnection) {
+                orderedConnections.push(nextConnection);
+                currentNodeId = nextConnection.target;
+            } else {
+                break;
+            }
+        }
+        
+        console.log('Connexions ordonnées:', orderedConnections);
+        
+        // Récupérer les textes de transition
+        orderedConnections.forEach(connection => {
+            if (connection.textElement) {
+                const lines = Array.from(connection.textElement.children)
+                    .map(lineContainer => {
+                        const textElement = lineContainer.querySelector('.transition-text');
+                        return textElement ? textElement.textContent.trim() : '';
+                    })
+                    .filter(text => text);
+                
+                const transitionText = lines.join(' ');
+                console.log('Texte de transition:', transitionText);
+                transitions.push(transitionText);
+            } else {
+                transitions.push('');
+            }
+        });
+        
+        console.log('Transitions finales:', transitions);
+        return transitions;
+    }
+
     // Fonction d'export MP4
     async function exportToMP4() {
-        const videoUrls = Array.from(document.querySelectorAll('.scene-node'))
-            .filter(node => node.querySelector('video'))
-            .map(node => node.querySelector('video').src);
+        const videos = Array.from(document.querySelectorAll('.scene-node video'));
+        console.log('Nombre de vidéos:', videos.length);
         
-        const transitions = connections.map(edge => edge.data?.transition || null);
+        const transitions = getTransitions();
+        console.log('Transitions:', transitions);
 
         try {
-            const response = await fetch('http://localhost:3000/export', {
+            // Démarrer une nouvelle session d'export
+            const startResponse = await fetch('http://localhost:3000/export/start', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ videoUrls, transitions }),
             });
-
-            if (!response.ok) {
-                throw new Error('Erreur lors de l\'export');
+            
+            if (!startResponse.ok) {
+                throw new Error('Erreur lors du démarrage de l\'export');
             }
 
+            const { sessionId } = await startResponse.json();
+            console.log('Session ID:', sessionId);
+
+            // Uploader chaque vidéo
+            for (let i = 0; i < videos.length; i++) {
+                console.log('Upload vidéo:', i);
+                const base64Data = await videoToBase64(videos[i]);
+                const transitionText = transitions[i] || null;
+                
+                console.log('Transition pour vidéo', i, ':', transitionText);
+                
+                const uploadResponse = await fetch(`http://localhost:3000/export/upload/${sessionId}/${i}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ 
+                        videoData: base64Data,
+                        transitionText: transitionText
+                    }),
+                });
+
+                if (!uploadResponse.ok) {
+                    throw new Error('Erreur lors de l\'upload de la vidéo ' + (i + 1));
+                }
+                
+                console.log('Upload vidéo', i, 'terminé');
+            }
+
+            console.log('Finalisation de l\'export...');
+            
+            // Finaliser l'export
+            const finishResponse = await fetch(`http://localhost:3000/export/finish/${sessionId}`, {
+                method: 'POST',
+            });
+
+            if (!finishResponse.ok) {
+                throw new Error('Erreur lors de la finalisation de l\'export');
+            }
+
+            console.log('Export terminé, téléchargement...');
+
             // Télécharger le fichier
-            const blob = await response.blob();
+            const blob = await finishResponse.blob();
             const url = window.URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
