@@ -1386,6 +1386,64 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
+    async function exportSequence() {
+        try {
+            // Récupérer la séquence actuelle
+            const sequence = [];
+            let currentNode = document.querySelectorAll('.scene-node')[0]; // Commencer par le premier nœud
+            
+            while (currentNode) {
+                sequence.push({
+                    id: currentNode.id,
+                    file: currentNode.querySelector('video').src
+                });
+                
+                // Trouver le prochain nœud connecté
+                const connection = connections.find(c => c.source === currentNode.id);
+                if (!connection) break;
+                currentNode = document.getElementById(connection.target);
+            }
+            
+            if (sequence.length === 0) {
+                alert("Aucune séquence à exporter. Veuillez d'abord créer une séquence de vidéos.");
+                return;
+            }
+            
+            // Créer un FormData avec les fichiers et la séquence
+            const formData = new FormData();
+            sequence.forEach(node => {
+                formData.append('videos', node.file);
+            });
+            formData.append('sequence', JSON.stringify(sequence.map(n => n.id)));
+            
+            // Envoyer au serveur
+            const response = await fetch('/api/export/sequence', {
+                method: 'POST',
+                body: formData
+            });
+            
+            if (!response.ok) {
+                throw new Error('Erreur lors de l\'export');
+            }
+            
+            // Télécharger le fichier
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'sequence_finale.mp4';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+            
+            alert('Export réussi !');
+        } catch (error) {
+            console.error('Erreur lors de l\'export:', error);
+            alert('Erreur lors de l\'export: ' + error.message);
+        }
+    }
+
     // Annuler la connexion avec Escape
     document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape') {

@@ -1,26 +1,37 @@
 const express = require('express');
 const multer = require('multer');
 const path = require('path');
+const fs = require('fs');
+const cors = require('cors');
 const os = require('os');
 
 const app = express();
 const port = 3000;
 
-// Configuration de multer pour sauvegarder sur le bureau
+// Middleware
+app.use(cors());
+app.use(express.json());
+app.use(express.static('.'));
+
+// Configuration de multer pour les uploads
 const storage = multer.diskStorage({
-    destination: function (req, file, cb) {
-        const desktopPath = path.join(os.homedir(), 'Desktop');
-        cb(null, desktopPath);
+    destination: (req, file, cb) => {
+        const dir = './uploads';
+        if (!fs.existsSync(dir)) {
+            fs.mkdirSync(dir, { recursive: true });
+        }
+        cb(null, dir);
     },
-    filename: function (req, file, cb) {
-        cb(null, file.originalname);
+    filename: (req, file, cb) => {
+        cb(null, Date.now() + path.extname(file.originalname));
     }
 });
 
 const upload = multer({ storage: storage });
 
-// Servir les fichiers statiques
-app.use(express.static('.'));
+// Routes
+const exportRoutes = require('./backend/src/routes/export');
+app.use('/api/export', exportRoutes);
 
 // Route pour sauvegarder le projet
 app.post('/save-project', upload.single('file'), (req, res) => {
@@ -30,6 +41,14 @@ app.post('/save-project', upload.single('file'), (req, res) => {
     } catch (error) {
         console.error('Erreur lors de la sauvegarde:', error);
         res.status(500).json({ error: error.message });
+    }
+});
+
+// Créer les dossiers nécessaires
+['uploads', 'exports', 'temp/uploads'].forEach(dir => {
+    const fullPath = path.join(__dirname, dir);
+    if (!fs.existsSync(fullPath)) {
+        fs.mkdirSync(fullPath, { recursive: true });
     }
 });
 
