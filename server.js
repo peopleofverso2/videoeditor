@@ -151,70 +151,92 @@ app.post('/export/finish/:sessionId', async (req, res) => {
                 const transitionText = session.transitions[index];
                 console.log('Création transition:', transitionText);
                 
-                // Créer une image noire avec le texte
-                const transitionPath = path.join(session.dir, `transition_${index}.png`);
-                await new Promise((resolve, reject) => {
-                    const { createCanvas } = require('canvas');
-                    const canvas = createCanvas(1920, 1080);
-                    const ctx = canvas.getContext('2d');
-                    
-                    // Fond noir
-                    ctx.fillStyle = 'black';
-                    ctx.fillRect(0, 0, 1920, 1080);
-                    
-                    // Configuration du texte
-                    ctx.fillStyle = 'white';
-                    ctx.font = 'bold 120px Arial';
-                    ctx.textAlign = 'center';
-                    ctx.textBaseline = 'middle';
-                    
-                    // Créer les trois lignes
-                    const lines = [
-                        'Ligne 1',
-                        'Ligne 2',
-                        'Ligne 3'
-                    ];
-                    
-                    // Calculer la hauteur totale du texte
-                    const lineHeight = 300;  // Grand espacement vertical
-                    const totalHeight = lines.length * lineHeight;
-                    
-                    // Position verticale de départ (centré)
-                    let y = (canvas.height - totalHeight) / 2 + lineHeight / 2;
-                    
-                    // Dessiner chaque ligne
-                    lines.forEach(line => {
-                        ctx.fillText(line, canvas.width / 2, y);
-                        y += lineHeight;
-                    });
-                    
-                    // Sauvegarder l'image
-                    const out = fs.createWriteStream(transitionPath);
-                    const stream = canvas.createPNGStream();
-                    stream.pipe(out);
-                    out.on('finish', resolve);
-                    out.on('error', reject);
-                });
+                // Créer un dossier temporaire pour les frames
+                const framesDir = path.join(session.dir, `transition_frames_${index}`);
+                if (!fs.existsSync(framesDir)) {
+                    fs.mkdirSync(framesDir);
+                }
+
+                // Générer 90 frames pour 3 secondes à 30fps
+                const totalFrames = 90;
+                const fadeInFrames = 15;  // 0.5 seconde de fade in
+                const fadeOutFrames = 15;  // 0.5 seconde de fade out
+                const lines = ['Ligne 1', 'Ligne 2', 'Ligne 3'];
                 
-                // Créer une vidéo de 3 secondes à partir de l'image
+                for (let frame = 0; frame < totalFrames; frame++) {
+                    const framePath = path.join(framesDir, `frame_${frame.toString().padStart(4, '0')}.png`);
+                    await new Promise((resolve, reject) => {
+                        const { createCanvas } = require('canvas');
+                        const canvas = createCanvas(1920, 1080);
+                        const ctx = canvas.getContext('2d');
+                        
+                        // Fond noir
+                        ctx.fillStyle = 'black';
+                        ctx.fillRect(0, 0, 1920, 1080);
+                        
+                        // Configuration du texte
+                        ctx.font = 'bold 120px Arial';
+                        ctx.textAlign = 'center';
+                        ctx.textBaseline = 'middle';
+                        
+                        // Calculer les opacités pour chaque ligne
+                        lines.forEach((line, lineIndex) => {
+                            let opacity = 1;
+                            const lineDelay = lineIndex * 10;  // Délai entre chaque ligne
+                            
+                            if (frame < fadeInFrames + lineDelay) {
+                                // Fade in
+                                opacity = (frame - lineDelay) / fadeInFrames;
+                            } else if (frame > totalFrames - fadeOutFrames) {
+                                // Fade out
+                                opacity = (totalFrames - frame) / fadeOutFrames;
+                            }
+                            
+                            opacity = Math.max(0, Math.min(1, opacity));  // Limiter entre 0 et 1
+                            
+                            // Dessiner le texte avec l'opacité calculée
+                            ctx.fillStyle = `rgba(255, 255, 255, ${opacity})`;
+                            
+                            // Position verticale avec espacement
+                            const lineHeight = 300;
+                            const totalHeight = lines.length * lineHeight;
+                            const y = (canvas.height - totalHeight) / 2 + lineHeight / 2 + (lineIndex * lineHeight);
+                            
+                            ctx.fillText(line, canvas.width / 2, y);
+                        });
+                        
+                        // Sauvegarder l'image
+                        const out = fs.createWriteStream(framePath);
+                        const stream = canvas.createPNGStream();
+                        stream.pipe(out);
+                        out.on('finish', resolve);
+                        out.on('error', reject);
+                    });
+                }
+                
+                // Créer la vidéo à partir des frames
                 const transitionVideoPath = path.join(session.dir, `transition_${index}.mp4`);
                 await new Promise((resolve, reject) => {
                     ffmpeg()
-                        .input(transitionPath)
-                        .inputOptions(['-loop 1'])
+                        .input(path.join(framesDir, 'frame_%04d.png'))
+                        .inputOptions(['-framerate 30'])
                         .outputOptions([
-                            '-t 3',
                             '-c:v libx264',
                             '-preset medium',
                             '-crf 23',
                             '-pix_fmt yuv420p',
                             '-movflags +faststart',
-                            `-r ${FPS}`,
+                            '-r 30',
                             '-an'  // Pas de son
                         ])
                         .output(transitionVideoPath)
                         .on('end', () => {
                             console.log('Transition créée:', transitionVideoPath);
+                            // Nettoyer les frames
+                            fs.readdirSync(framesDir).forEach(file => {
+                                fs.unlinkSync(path.join(framesDir, file));
+                            });
+                            fs.rmdirSync(framesDir);
                             resolve();
                         })
                         .on('error', (err) => {
