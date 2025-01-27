@@ -1472,4 +1472,48 @@ document.addEventListener('DOMContentLoaded', function() {
             connection.textElement.appendChild(lineContainer);
         });
     }
+
+    // Fonction d'export MP4
+    async function exportToMP4() {
+        const videoUrls = Array.from(document.querySelectorAll('.scene-node'))
+            .filter(node => node.querySelector('video'))
+            .map(node => node.querySelector('video').src);
+        
+        const transitions = connections.map(edge => edge.data?.transition || null);
+
+        try {
+            const response = await fetch('http://localhost:3000/export', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ videoUrls, transitions }),
+            });
+
+            if (!response.ok) {
+                throw new Error('Erreur lors de l\'export');
+            }
+
+            // Télécharger le fichier
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'video_export.mp4';
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+
+        } catch (error) {
+            console.error('Erreur lors de l\'export:', error);
+            alert('Erreur lors de l\'export de la vidéo');
+        }
+    }
+
+    // Ajouter le bouton d'export dans la toolbar
+    const exportButton = document.createElement('button');
+    exportButton.textContent = 'Exporter en MP4';
+    exportButton.onclick = exportToMP4;
+    toolbar.appendChild(exportButton);
 });
