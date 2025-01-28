@@ -314,7 +314,10 @@ function NodeEditor({ videos, onScenarioChange }) {
           ? { 
               ...edge, 
               label: data.choice,
-              data: { buttonStyle: data.buttonStyle }
+              data: { 
+                choice: data.choice,
+                buttonStyle: data.buttonStyle 
+              }
             }
           : edge
       ));
@@ -322,7 +325,10 @@ function NodeEditor({ videos, onScenarioChange }) {
       const edge = {
         ...choiceDialog.connection,
         label: data.choice,
-        data: { buttonStyle: data.buttonStyle },
+        data: { 
+          choice: data.choice,
+          buttonStyle: data.buttonStyle
+        },
         type: 'default',
         animated: true,
         style: { stroke: data.buttonStyle.color }
@@ -339,12 +345,13 @@ function NodeEditor({ videos, onScenarioChange }) {
         choices: edges
           .filter(edge => edge.source === node.id)
           .map(edge => ({
-            choice: edge.label,
+            choice: edge.data?.choice || edge.label,
             buttonStyle: edge.data?.buttonStyle,
             nextVideo: edge.target
           }))
       }))
     };
+    console.log('Updated scenario:', scenario);
     onScenarioChange(scenario);
   };
 

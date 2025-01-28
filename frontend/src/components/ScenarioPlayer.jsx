@@ -82,11 +82,20 @@ function ScenarioPlayer({ scenario, onClose }) {
 
   const currentNode = scenario.nodes.find(node => node.id === currentNodeId);
   
+  // Debug: Afficher les données du scénario
+  console.log('Current Node:', currentNode);
+  console.log('Choices:', currentNode?.choices);
+
   const handleProgress = ({ played }) => {
     setProgress(played);
+    
+    // Debug: Afficher le temps restant
+    const player = playerRef.current?.getInternalPlayer();
+    if (player) {
+      console.log('Time remaining:', player.duration - player.currentTime);
+    }
 
     // Vérifier si on doit afficher les choix avant la fin
-    const player = playerRef.current?.getInternalPlayer();
     if (player) {
       const duration = player.duration;
       const currentTime = player.currentTime;
@@ -98,13 +107,16 @@ function ScenarioPlayer({ scenario, onClose }) {
       });
 
       if (shouldShowChoices && !showChoices) {
+        console.log('Showing choices early');
         setShowChoices(true);
       }
     }
   };
 
   const handleVideoEnd = () => {
+    console.log('Video ended');
     if (!showChoices && currentNode.choices.length > 0) {
+      console.log('Showing choices at end');
       setShowChoices(true);
     } else if (currentNode.choices.length === 0) {
       onClose();
@@ -112,11 +124,15 @@ function ScenarioPlayer({ scenario, onClose }) {
   };
 
   const handleChoice = (nextVideo) => {
+    console.log('Choice selected:', nextVideo);
     setShowChoices(false);
     setCurrentNodeId(nextVideo);
   };
 
-  if (!currentNode) return null;
+  if (!currentNode) {
+    console.log('No current node found');
+    return null;
+  }
 
   return (
     <Box 
@@ -146,35 +162,46 @@ function ScenarioPlayer({ scenario, onClose }) {
         style={{ maxHeight: '100vh' }}
       />
 
-      {showChoices && currentNode.choices.map((choice, index) => {
-        const position = getButtonPosition(choice.buttonStyle?.position || 'bottom');
-        const buttonStyle = getButtonStyle(choice.buttonStyle || {});
+      {showChoices && currentNode.choices && currentNode.choices.length > 0 && (
+        <Box sx={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}>
+          {currentNode.choices.map((choice, index) => {
+            console.log('Rendering choice:', choice);
+            const position = getButtonPosition(choice.buttonStyle?.position || 'bottom');
+            const buttonStyle = getButtonStyle(choice.buttonStyle || {
+              position: 'bottom',
+              color: '#2196f3',
+              size: 'medium',
+              shape: 'rounded'
+            });
 
-        return (
-          <Fade 
-            key={index} 
-            in={showChoices}
-            timeout={500}
-          >
-            <Box
-              sx={{
-                position: 'absolute',
-                display: 'flex',
-                gap: 2,
-                ...position
-              }}
-            >
-              <Button
-                variant="contained"
-                onClick={() => handleChoice(choice.nextVideo)}
-                sx={buttonStyle}
+            return (
+              <Fade 
+                key={index} 
+                in={showChoices}
+                timeout={500}
               >
-                {choice.choice}
-              </Button>
-            </Box>
-          </Fade>
-        );
-      })}
+                <Box
+                  sx={{
+                    position: 'absolute',
+                    display: 'flex',
+                    gap: 2,
+                    pointerEvents: 'auto',
+                    ...position
+                  }}
+                >
+                  <Button
+                    variant="contained"
+                    onClick={() => handleChoice(choice.nextVideo)}
+                    sx={buttonStyle}
+                  >
+                    {choice.choice}
+                  </Button>
+                </Box>
+              </Fade>
+            );
+          })}
+        </Box>
+      )}
     </Box>
   );
 }
