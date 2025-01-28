@@ -6,39 +6,41 @@
 
 body {
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
-    background-color: #f5f5f5;
+    background-color: #1e1e1e;
+    color: #fff;
 }
 
 #app {
     height: 100vh;
     display: flex;
     flex-direction: column;
+    background-color: #1e1e1e;
 }
 
 .toolbar {
-    background: white;
     padding: 1rem;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    background-color: #1e1e1e;
+    border-bottom: 1px solid #333;
     display: flex;
-    gap: 10px;
-    padding: 10px;
-    background: white;
-    border-bottom: 1px solid #ddd;
+    gap: 8px;
     align-items: center;
 }
 
 .toolbar button {
-    background: #4CAF50;
-    color: white;
-    border: none;
-    padding: 0.5rem 1rem;
+    background-color: #2d2d2d;
+    border: 1px solid #FFA500;
+    color: #fff;
+    padding: 8px 16px;
     border-radius: 4px;
     cursor: pointer;
-    font-size: 14px;
+    transition: all 0.2s;
+    margin-right: 8px;
 }
 
 .toolbar button:hover {
-    background: #45a049;
+    background-color: #FFA500;
+    color: #fff;
+    border-color: #FF8C00;
 }
 
 .zoom-controls {
@@ -71,38 +73,37 @@ body {
     position: relative;
     flex: 1;
     overflow: hidden;
-    background: #f5f5f5;
+    background: #252525;
     min-height: 300px;
 }
 
 .drop-zone {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
+    width: 100%;
+    height: 100%;
+    border: 3px dashed #333;
+    margin: 2rem;
+    border-radius: 8px;
+    background-color: #252525;
     display: flex;
     align-items: center;
     justify-content: center;
-    border: 3px dashed #ccc;
-    margin: 2rem;
-    border-radius: 8px;
-    background: white;
+    color: #888;
     transition: all 0.3s ease;
 }
 
+.drop-zone:hover,
 .drop-zone.dragover {
-    border-color: #4CAF50;
-    background: #e8f5e9;
+    background-color: #2a2a2a;
+    border-color: #FF8C00;
 }
 
 .drop-message {
     text-align: center;
-    color: #666;
+    color: #888;
 }
 
 .drop-icon {
-    font-size: 3rem;
+    font-size: 48px;
     margin-bottom: 1rem;
 }
 
@@ -174,7 +175,7 @@ body {
 }
 
 .scene-node.playing {
-    box-shadow: 0 0 0 2px #4CAF50;
+    box-shadow: 0 0 0 2px #FF8C00;
 }
 
 .video-container {
@@ -250,7 +251,7 @@ body {
     width: 16px;
     height: 16px;
     background: white;
-    border: 2px solid #4CAF50;
+    border: 2px solid #FF8C00;
     border-radius: 50%;
     cursor: pointer;
     z-index: 100;
@@ -271,7 +272,7 @@ body {
 
 .connection-point:hover,
 .connection-point.active {
-    background: #4CAF50;
+    background: #FF8C00;
     transform: translateX(-50%) scale(1.2);
     box-shadow: 0 0 0 2px white;
 }
@@ -371,7 +372,7 @@ body {
 }
 
 .fullscreen-text-line.linked:hover {
-    color: #4CAF50;
+    color: #FF8C00;
 }
 
 .fullscreen-text-line.linked::after {
@@ -382,7 +383,7 @@ body {
     transform: translateX(-50%);
     width: 0;
     height: 2px;
-    background: #4CAF50;
+    background: #FF8C00;
     transition: width 0.3s ease;
 }
 
@@ -398,13 +399,13 @@ body {
 }
 
 .fullscreen-text-line:hover {
-    background: rgba(76, 175, 80, 0.3);
+    background: rgba(255, 165, 0, 0.3);
     border-color: rgba(255, 255, 255, 0.5);
     transform: scale(1.05);
 }
 
 .fullscreen-text-line.hover {
-    background: rgba(76, 175, 80, 0.3);
+    background: rgba(255, 165, 0, 0.3);
     border-color: rgba(255, 255, 255, 0.5);
     transform: scale(1.05);
 }
@@ -480,7 +481,7 @@ body {
 }
 
 .modal-content input:focus {
-    border-color: #4CAF50;
+    border-color: #FF8C00;
     outline: none;
 }
 
@@ -520,7 +521,7 @@ body {
 }
 
 #confirmSave {
-    background-color: #4CAF50;
+    background-color: #FF8C00;
     color: white;
 }
 
@@ -530,7 +531,7 @@ body {
 }
 
 #confirmSave:hover {
-    background-color: #45a049;
+    background-color: #FF9900;
     transform: translateY(-1px);
 }
 
@@ -678,20 +679,20 @@ body {
 }
 
 .link-node-button.linking {
-    background: rgba(76, 175, 80, 0.2);
-    color: #4CAF50;
+    background: rgba(255, 165, 0, 0.2);
+    color: #FF8C00;
     opacity: 1;
     animation: pulse 1s infinite;
 }
 
 .link-node-button.linked {
-    color: #4CAF50;
+    color: #FF8C00;
     opacity: 1;
-    background: rgba(76, 175, 80, 0.1);
+    background: rgba(255, 165, 0, 0.1);
 }
 
 .link-node-button.linked:hover {
-    background: rgba(76, 175, 80, 0.2);
+    background: rgba(255, 165, 0, 0.2);
 }
 
 .link-node-button.linked + .link-destination {
@@ -709,7 +710,7 @@ body {
 }
 
 .link-destination {
-    color: #4CAF50;
+    color: #FF8C00;
     font-size: 14px;
     opacity: 0;
     transition: all 0.3s;
@@ -725,29 +726,41 @@ body {
 .linking-mode .scene-node {
     cursor: pointer !important;
     transition: all 0.2s;
-    outline: 2px dashed #4CAF50;
+    outline: 2px dashed #FF8C00;
     outline-offset: 4px;
 }
 
 .linking-mode .scene-node:hover {
     transform: scale(1.05);
-    outline: 2px solid #4CAF50;
+    outline: 2px solid #FF8C00;
 }
 
 .delete-transition-text {
-    background: none;
-    border: none;
-    color: #666;
-    cursor: pointer;
-    padding: 4px;
-    font-size: 12px;
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    width: 20px;
+    height: 20px;
+    background: #2d2d2d;
+    border: 1px solid #FFA500;
     border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #FFA500;
+    font-size: 14px;
+    cursor: pointer;
     transition: all 0.2s;
+    z-index: 1000;
 }
 
 .delete-transition-text:hover {
-    background: rgba(255, 255, 255, 0.1);
+    background: #FFA500;
     color: white;
+}
+
+.transition-text:hover .delete-transition-text {
+    opacity: 1;
 }
 
 .playback-controls {
@@ -792,7 +805,7 @@ body {
 
 .control-button.auto-play.active {
     opacity: 1;
-    color: #4CAF50;
+    color: #FF8C00;
 }
 
 .tooltip {
@@ -896,6 +909,24 @@ body {
 
 .link-node-button.active {
     opacity: 1;
-    color: #4CAF50;
-    background: rgba(76, 175, 80, 0.2);
+    color: #FF8C00;
+    background: rgba(255, 165, 0, 0.2);
+}
+
+.btn-primary,
+.btn-success {
+    background-color: #2d2d2d;
+    border: 1px solid #FFA500;
+    color: #fff;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-primary:hover,
+.btn-success:hover {
+    background-color: #FFA500;
+    color: #fff;
+    border-color: #FF8C00;
 }

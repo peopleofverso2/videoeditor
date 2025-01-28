@@ -317,7 +317,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
                     // Créer la nouvelle connexion
                     const line = new LeaderLine(startPoint, endPoint, {
-                        color: '#4CAF50',
+                        color: '#FFA500',
                         size: 2,
                         path: 'straight',
                         startSocket: 'bottom',
@@ -1174,7 +1174,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     const endPoint = endNode.querySelector('.connection-point.top');
 
                     const line = new LeaderLine(startPoint, endPoint, {
-                        color: '#4CAF50',
+                        color: '#FFA500',
                         size: 2,
                         path: 'straight',
                         startSocket: 'bottom',
