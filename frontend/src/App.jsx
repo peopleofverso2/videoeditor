@@ -15,7 +15,9 @@ import {
   DialogActions,
   Select,
   FormControl,
-  InputLabel
+  InputLabel,
+  AppBar,
+  Toolbar
 } from '@mui/material';
 import { createTheme } from '@mui/material/styles';
 import ReactPlayer from 'react-player';
@@ -252,6 +254,18 @@ function App() {
     setDialogOpen(false);
   };
 
+  const handleScenarioChange = (newScenario) => {
+    console.log('Saving scenario:', newScenario);
+    setScenario(newScenario);
+  };
+
+  const handlePlayScenario = () => {
+    if (scenario && scenario.nodes.length > 0) {
+      console.log('Starting scenario playback:', scenario);
+      setIsPlayingScenario(true);
+    }
+  };
+
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
@@ -264,158 +278,143 @@ function App() {
           overflow: 'auto'
         }}
       >
-        <Box sx={{ mb: 2, display: 'flex', justifyContent: 'flex-end', gap: 1 }}>
-          <Button
-            variant="contained"
-            startIcon={<AccountTreeIcon />}
-            onClick={() => setShowNodeEditor(true)}
-            disabled={videos.length < 1}
-          >
-            Éditeur de scénario
-          </Button>
-          <Button
-            variant="contained"
-            startIcon={<PlayArrowIcon />}
-            onClick={() => setIsPlayingSequence(true)}
-            disabled={videos.length < 1}
-          >
-            Lire la séquence
-          </Button>
-          {scenario && (
-            <Button
-              variant="contained"
-              color="secondary"
-              startIcon={<PlayArrowIcon />}
-              onClick={() => setIsPlayingScenario(true)}
-            >
-              Lire le scénario
-            </Button>
+        <AppBar position="static">
+          <Toolbar>
+            <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
+              Éditeur de Vidéos Interactif
+            </Typography>
+            {videos.length > 0 && (
+              <>
+                <Button 
+                  color="inherit" 
+                  onClick={() => setShowNodeEditor(!showNodeEditor)}
+                  sx={{ mr: 2 }}
+                >
+                  {showNodeEditor ? 'Retour à la galerie' : 'Éditeur de scénario'}
+                </Button>
+                {scenario && (
+                  <Button 
+                    color="inherit"
+                    onClick={handlePlayScenario}
+                  >
+                    Lire le scénario
+                  </Button>
+                )}
+              </>
+            )}
+          </Toolbar>
+        </AppBar>
+
+        <Box sx={{ flexGrow: 1, position: 'relative' }}>
+          {showNodeEditor ? (
+            <NodeEditor 
+              videos={videos} 
+              onScenarioChange={handleScenarioChange}
+              initialScenario={scenario}
+            />
+          ) : (
+            <Box sx={{ p: 3 }}>
+              <Typography variant="h5" sx={{ mb: 3 }}>
+                Galerie de vidéos
+              </Typography>
+              <Grid container spacing={2}>
+                {videos.map((url, index) => (
+                  <Grid item xs={12} md={6} lg={4} key={url}>
+                    <VideoPlayer 
+                      url={url} 
+                      onDelete={() => handleDeleteVideo(index)}
+                      onTransitionClick={handleTransitionClick}
+                      isSelected={selectedVideoIndex === index}
+                      index={index}
+                    />
+                    {transitions.find(t => t.from === index) && (
+                      <Typography 
+                        variant="body2" 
+                        sx={{ 
+                          mt: 1, 
+                          textAlign: 'center',
+                          color: 'primary.main'
+                        }}
+                      >
+                        Transition: {transitions.find(t => t.from === index).type}
+                      </Typography>
+                    )}
+                  </Grid>
+                ))}
+                <Grid item xs={12} md={6} lg={4}>
+                  <Box
+                    sx={{
+                      width: '100%',
+                      aspectRatio: '16/9',
+                      border: '3px dashed',
+                      borderColor: 'grey.700',
+                      borderRadius: 2,
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      bgcolor: 'background.paper',
+                      cursor: 'pointer',
+                      '&:hover': {
+                        borderColor: 'primary.main',
+                        '& .MuiTypography-root': {
+                          color: 'primary.main'
+                        }
+                      }
+                    }}
+                    onDrop={handleDrop}
+                    onDragOver={handleDragOver}
+                  >
+                    <AddIcon sx={{ fontSize: 48, color: 'text.secondary', mb: 2 }} />
+                    <Typography variant="h6" color="text.secondary" gutterBottom>
+                      Glissez et déposez une vidéo ici
+                    </Typography>
+                    <Typography variant="body1" color="text.secondary">
+                      ou
+                    </Typography>
+                    <Button 
+                      variant="contained" 
+                      component="label" 
+                      sx={{ mt: 2 }}
+                    >
+                      <input 
+                        type="file" 
+                        hidden 
+                        accept="video/*"
+                        onChange={handleFileSelect}
+                      />
+                      Sélectionner un fichier
+                    </Button>
+                  </Box>
+                </Grid>
+              </Grid>
+            </Box>
+          )}
+
+          <TransitionDialog 
+            open={dialogOpen}
+            onClose={() => {
+              setDialogOpen(false);
+              setSelectedVideoIndex(null);
+            }}
+            onConfirm={handleTransitionConfirm}
+          />
+
+          {isPlayingSequence && (
+            <SequencePlayer
+              videos={videos}
+              transitions={transitions}
+              onClose={() => setIsPlayingSequence(false)}
+            />
+          )}
+
+          {isPlayingScenario && scenario && (
+            <ScenarioPlayer
+              scenario={scenario}
+              onClose={() => setIsPlayingScenario(false)}
+            />
           )}
         </Box>
-
-        <Grid container spacing={2}>
-          {videos.map((url, index) => (
-            <Grid item xs={12} md={6} lg={4} key={url}>
-              <VideoPlayer 
-                url={url} 
-                onDelete={() => handleDeleteVideo(index)}
-                onTransitionClick={handleTransitionClick}
-                isSelected={selectedVideoIndex === index}
-                index={index}
-              />
-              {transitions.find(t => t.from === index) && (
-                <Typography 
-                  variant="body2" 
-                  sx={{ 
-                    mt: 1, 
-                    textAlign: 'center',
-                    color: 'primary.main'
-                  }}
-                >
-                  Transition: {transitions.find(t => t.from === index).type}
-                </Typography>
-              )}
-            </Grid>
-          ))}
-          <Grid item xs={12} md={6} lg={4}>
-            <Box
-              sx={{
-                width: '100%',
-                aspectRatio: '16/9',
-                border: '3px dashed',
-                borderColor: 'grey.700',
-                borderRadius: 2,
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                justifyContent: 'center',
-                bgcolor: 'background.paper',
-                cursor: 'pointer',
-                '&:hover': {
-                  borderColor: 'primary.main',
-                  '& .MuiTypography-root': {
-                    color: 'primary.main'
-                  }
-                }
-              }}
-              onDrop={handleDrop}
-              onDragOver={handleDragOver}
-            >
-              <AddIcon sx={{ fontSize: 48, color: 'text.secondary', mb: 2 }} />
-              <Typography variant="h6" color="text.secondary" gutterBottom>
-                Glissez et déposez une vidéo ici
-              </Typography>
-              <Typography variant="body1" color="text.secondary">
-                ou
-              </Typography>
-              <Button 
-                variant="contained" 
-                component="label" 
-                sx={{ mt: 2 }}
-              >
-                <input 
-                  type="file" 
-                  hidden 
-                  accept="video/*"
-                  onChange={handleFileSelect}
-                />
-                Sélectionner un fichier
-              </Button>
-            </Box>
-          </Grid>
-        </Grid>
-
-        <TransitionDialog 
-          open={dialogOpen}
-          onClose={() => {
-            setDialogOpen(false);
-            setSelectedVideoIndex(null);
-          }}
-          onConfirm={handleTransitionConfirm}
-        />
-
-        {showNodeEditor && (
-          <Dialog
-            fullScreen
-            open={showNodeEditor}
-            onClose={() => setShowNodeEditor(false)}
-          >
-            <Box sx={{ height: '100vh', p: 2 }}>
-              <Box sx={{ mb: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <Typography variant="h6">
-                  Éditeur de scénario interactif
-                </Typography>
-                <Button 
-                  variant="outlined" 
-                  onClick={() => setShowNodeEditor(false)}
-                >
-                  Fermer
-                </Button>
-              </Box>
-              <Box sx={{ height: 'calc(100% - 60px)' }}>
-                <NodeEditor 
-                  videos={videos}
-                  onScenarioChange={setScenario}
-                />
-              </Box>
-            </Box>
-          </Dialog>
-        )}
-
-        {isPlayingSequence && (
-          <SequencePlayer
-            videos={videos}
-            transitions={transitions}
-            onClose={() => setIsPlayingSequence(false)}
-          />
-        )}
-
-        {isPlayingScenario && scenario && (
-          <ScenarioPlayer
-            scenario={scenario}
-            onClose={() => setIsPlayingScenario(false)}
-          />
-        )}
       </Box>
     </ThemeProvider>
   );

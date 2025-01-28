@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Box, Button, Dialog, TextField, Typography, Paper } from '@mui/material';
 import ReactFlow, { 
   Background, 
@@ -274,30 +274,59 @@ const ChoiceDialog = ({ open, onClose, edge, onConfirm }) => {
   );
 };
 
-function NodeEditor({ videos, onScenarioChange }) {
-  const [nodes, setNodes, onNodesChange] = useNodesState([]);
-  const [edges, setEdges, onEdgesChange] = useEdgesState([]);
-  const [choiceDialog, setChoiceDialog] = useState({ open: false, edge: null });
+function NodeEditor({ videos, onScenarioChange, initialScenario }) {
+  const [nodes, setNodes] = useState([]);
+  const [edges, setEdges] = useState([]);
+  const [choiceDialog, setChoiceDialog] = useState({
+    open: false,
+    edge: null,
+    connection: null
+  });
 
-  // Initialiser les nœuds en cercle
-  React.useEffect(() => {
-    const radius = Math.max(200, videos.length * 50);
-    const angleStep = (2 * Math.PI) / videos.length;
-    
-    const newNodes = videos.map((url, index) => {
-      const angle = index * angleStep;
-      return {
-        id: index.toString(),
+  useEffect(() => {
+    if (initialScenario) {
+      console.log('Loading initial scenario:', initialScenario);
+      const newNodes = initialScenario.nodes.map((node, index) => ({
+        id: node.id,
         type: 'videoNode',
         position: { 
-          x: 400 + radius * Math.cos(angle), 
-          y: 300 + radius * Math.sin(angle)
+          x: 250 * Math.cos(2 * Math.PI * index / initialScenario.nodes.length),
+          y: 250 * Math.sin(2 * Math.PI * index / initialScenario.nodes.length)
         },
-        data: { url, label: `Video ${index + 1}` }
-      };
-    });
-    setNodes(newNodes);
-  }, [videos]);
+        data: { url: node.video }
+      }));
+
+      const newEdges = initialScenario.nodes.flatMap(node => 
+        node.choices.map(choice => ({
+          id: `${node.id}-${choice.nextVideo}`,
+          source: node.id,
+          target: choice.nextVideo,
+          label: choice.choice,
+          data: {
+            choice: choice.choice,
+            buttonStyle: choice.buttonStyle
+          },
+          type: 'default',
+          animated: true,
+          style: { stroke: choice.buttonStyle?.color || '#2196f3' }
+        }))
+      );
+
+      setNodes(newNodes);
+      setEdges(newEdges);
+    } else {
+      const initialNodes = videos.map((url, index) => ({
+        id: `${index}`,
+        type: 'videoNode',
+        position: { 
+          x: 250 * Math.cos(2 * Math.PI * index / videos.length),
+          y: 250 * Math.sin(2 * Math.PI * index / videos.length)
+        },
+        data: { url }
+      }));
+      setNodes(initialNodes);
+    }
+  }, [videos, initialScenario]);
 
   const onConnect = React.useCallback((params) => {
     setChoiceDialog({
@@ -337,7 +366,6 @@ function NodeEditor({ videos, onScenarioChange }) {
     }
     setChoiceDialog({ open: false, edge: null });
     
-    // Notifier le changement de scénario
     const scenario = {
       nodes: nodes.map(node => ({
         id: node.id,
@@ -368,8 +396,8 @@ function NodeEditor({ videos, onScenarioChange }) {
       <ReactFlow
         nodes={nodes}
         edges={edges}
-        onNodesChange={onNodesChange}
-        onEdgesChange={onEdgesChange}
+        onNodesChange={(changes) => setNodes(changes)}
+        onEdgesChange={(changes) => setEdges(changes)}
         onConnect={onConnect}
         onEdgeClick={onEdgeClick}
         nodeTypes={nodeTypes}
