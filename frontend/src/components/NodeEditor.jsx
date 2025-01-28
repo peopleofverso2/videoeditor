@@ -121,6 +121,159 @@ const nodeTypes = {
   videoNode: VideoNode
 };
 
+const ChoiceDialog = ({ open, onClose, edge, onConfirm }) => {
+  const [choice, setChoice] = useState(edge?.data?.choice || '');
+  const [buttonStyle, setButtonStyle] = useState(edge?.data?.buttonStyle || {
+    position: 'bottom',
+    color: '#2196f3',
+    size: 'medium',
+    shape: 'rounded',
+    timing: 0 // 0 = à la fin, nombre négatif = secondes avant la fin
+  });
+
+  const handleConfirm = () => {
+    onConfirm({
+      choice,
+      buttonStyle
+    });
+  };
+
+  return (
+    <Dialog 
+      open={open} 
+      onClose={onClose}
+      maxWidth="sm"
+      fullWidth
+    >
+      <Box sx={{ p: 3 }}>
+        <Typography variant="h6" sx={{ mb: 3 }}>
+          {edge ? 'Modifier le choix' : 'Ajouter un choix'}
+        </Typography>
+
+        <TextField
+          autoFocus
+          label="Texte du choix"
+          value={choice}
+          onChange={(e) => setChoice(e.target.value)}
+          fullWidth
+          sx={{ mb: 3 }}
+        />
+
+        <Typography variant="subtitle1" sx={{ mb: 2 }}>
+          Style du bouton
+        </Typography>
+
+        <Box sx={{ mb: 2 }}>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+            Position
+          </Typography>
+          <Box sx={{ display: 'flex', gap: 1 }}>
+            {['top', 'bottom', 'left', 'right'].map((pos) => (
+              <Button
+                key={pos}
+                variant={buttonStyle.position === pos ? 'contained' : 'outlined'}
+                size="small"
+                onClick={() => setButtonStyle({ ...buttonStyle, position: pos })}
+              >
+                {pos}
+              </Button>
+            ))}
+          </Box>
+        </Box>
+
+        <Box sx={{ mb: 2 }}>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+            Couleur
+          </Typography>
+          <Box sx={{ display: 'flex', gap: 1 }}>
+            {['#2196f3', '#4caf50', '#f44336', '#ff9800', '#9c27b0'].map((color) => (
+              <Box
+                key={color}
+                onClick={() => setButtonStyle({ ...buttonStyle, color })}
+                sx={{
+                  width: 32,
+                  height: 32,
+                  bgcolor: color,
+                  borderRadius: 1,
+                  cursor: 'pointer',
+                  border: buttonStyle.color === color ? '3px solid white' : 'none',
+                  outline: buttonStyle.color === color ? `2px solid ${color}` : 'none'
+                }}
+              />
+            ))}
+          </Box>
+        </Box>
+
+        <Box sx={{ mb: 2 }}>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+            Taille
+          </Typography>
+          <Box sx={{ display: 'flex', gap: 1 }}>
+            {['small', 'medium', 'large'].map((size) => (
+              <Button
+                key={size}
+                variant={buttonStyle.size === size ? 'contained' : 'outlined'}
+                size="small"
+                onClick={() => setButtonStyle({ ...buttonStyle, size })}
+              >
+                {size}
+              </Button>
+            ))}
+          </Box>
+        </Box>
+
+        <Box sx={{ mb: 3 }}>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+            Forme
+          </Typography>
+          <Box sx={{ display: 'flex', gap: 1 }}>
+            {['rounded', 'circular', 'square'].map((shape) => (
+              <Button
+                key={shape}
+                variant={buttonStyle.shape === shape ? 'contained' : 'outlined'}
+                size="small"
+                onClick={() => setButtonStyle({ ...buttonStyle, shape })}
+              >
+                {shape}
+              </Button>
+            ))}
+          </Box>
+        </Box>
+
+        <Box sx={{ mb: 3 }}>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+            Apparition
+          </Typography>
+          <TextField
+            type="number"
+            label="Secondes avant la fin (-5 = 5s avant)"
+            value={buttonStyle.timing}
+            onChange={(e) => setButtonStyle({ 
+              ...buttonStyle, 
+              timing: parseInt(e.target.value) 
+            })}
+            fullWidth
+            size="small"
+          />
+        </Box>
+
+        <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1 }}>
+          <Button onClick={onClose}>
+            Annuler
+          </Button>
+          <Button 
+            variant="contained"
+            onClick={handleConfirm}
+            disabled={!choice.trim()}
+          >
+            Confirmer
+          </Button>
+        </Box>
+      </Box>
+    </Dialog>
+  );
+};
+
 function NodeEditor({ videos, onScenarioChange }) {
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
@@ -154,20 +307,25 @@ function NodeEditor({ videos, onScenarioChange }) {
     });
   }, []);
 
-  const handleChoiceConfirm = (choice) => {
+  const handleChoiceConfirm = (data) => {
     if (choiceDialog.edge) {
       setEdges(edges.map(edge => 
         edge.id === choiceDialog.edge.id 
-          ? { ...edge, label: choice }
+          ? { 
+              ...edge, 
+              label: data.choice,
+              data: { buttonStyle: data.buttonStyle }
+            }
           : edge
       ));
     } else {
       const edge = {
         ...choiceDialog.connection,
-        label: choice,
+        label: data.choice,
+        data: { buttonStyle: data.buttonStyle },
         type: 'default',
         animated: true,
-        style: { stroke: '#2196f3' }
+        style: { stroke: data.buttonStyle.color }
       };
       setEdges(prev => addEdge(edge, prev));
     }
@@ -182,6 +340,7 @@ function NodeEditor({ videos, onScenarioChange }) {
           .filter(edge => edge.source === node.id)
           .map(edge => ({
             choice: edge.label,
+            buttonStyle: edge.data?.buttonStyle,
             nextVideo: edge.target
           }))
       }))
@@ -216,12 +375,13 @@ function NodeEditor({ videos, onScenarioChange }) {
         <Panel position="top-left" style={{ margin: 10 }}>
           <Paper sx={{ p: 2 }}>
             <Typography variant="body2" color="text.secondary">
-              Conseils :
+              💡 Conseils :
             </Typography>
             <Typography variant="body2" color="text.secondary" component="ul" sx={{ mt: 1, pl: 2 }}>
               <li>Glissez entre deux vidéos pour créer un lien</li>
-              <li>Cliquez sur un lien pour modifier son texte</li>
+              <li>Cliquez sur un lien pour modifier son texte et son style</li>
               <li>Survolez une vidéo pour la prévisualiser</li>
+              <li>Personnalisez l'apparence des boutons de choix</li>
             </Typography>
           </Paper>
         </Panel>
@@ -230,42 +390,12 @@ function NodeEditor({ videos, onScenarioChange }) {
         <MiniMap />
       </ReactFlow>
 
-      <Dialog 
-        open={choiceDialog.open} 
+      <ChoiceDialog 
+        open={choiceDialog.open}
+        edge={choiceDialog.edge}
         onClose={() => setChoiceDialog({ open: false, edge: null })}
-      >
-        <Box sx={{ p: 2 }}>
-          <Typography variant="h6" sx={{ mb: 2 }}>
-            {choiceDialog.edge ? 'Modifier le choix' : 'Ajouter un choix'}
-          </Typography>
-          <TextField
-            autoFocus
-            label="Texte du choix"
-            defaultValue={choiceDialog.edge?.label || ''}
-            fullWidth
-            onKeyPress={(e) => {
-              if (e.key === 'Enter') {
-                handleChoiceConfirm(e.target.value);
-              }
-            }}
-          />
-          <Box sx={{ mt: 2, display: 'flex', justifyContent: 'flex-end', gap: 1 }}>
-            <Button 
-              onClick={() => setChoiceDialog({ open: false, edge: null })}
-            >
-              Annuler
-            </Button>
-            <Button 
-              variant="contained"
-              onClick={(e) => handleChoiceConfirm(
-                e.target.parentElement.parentElement.querySelector('input').value
-              )}
-            >
-              Confirmer
-            </Button>
-          </Box>
-        </Box>
-      </Dialog>
+        onConfirm={handleChoiceConfirm}
+      />
     </Box>
   );
 }
