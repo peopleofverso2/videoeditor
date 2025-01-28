@@ -1,17 +1,15 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Box, Button, Dialog, TextField, Typography, Paper } from '@mui/material';
 import ReactFlow, { 
   Background, 
   Controls,
   MiniMap,
-  addEdge,
   useNodesState,
   useEdgesState,
   Panel,
   Handle,
   Position
 } from 'reactflow';
-import 'reactflow/dist/base.css';
 import 'reactflow/dist/style.css';
 
 const VideoNode = ({ data }) => {
@@ -25,21 +23,14 @@ const VideoNode = ({ data }) => {
         width: 200,
         position: 'relative',
         '&:hover': {
-          boxShadow: 6,
-          '& .handle': {
-            opacity: 1,
-            transform: 'scale(1.2)',
-          }
+          boxShadow: 6
         }
       }}
     >
       <Handle
         type="target"
         position={Position.Top}
-        className="handle"
         style={{
-          opacity: 0.5,
-          transition: 'all 0.2s ease',
           background: '#2196f3',
           width: 10,
           height: 10
@@ -49,10 +40,7 @@ const VideoNode = ({ data }) => {
       <Handle
         type="source"
         position={Position.Bottom}
-        className="handle"
         style={{
-          opacity: 0.5,
-          transition: 'all 0.2s ease',
           background: '#2196f3',
           width: 10,
           height: 10
@@ -277,7 +265,7 @@ function NodeEditor({ videos, onScenarioChange, initialScenario }) {
       setNodes(newNodes);
       setEdges(newEdges);
     } else if (videos.length > 0 && nodes.length === 0) {
-      console.log('Creating initial node from videos:', videos);
+      console.log('Creating initial nodes from videos:', videos);
       const initialNodes = videos.map((video, index) => ({
         id: `${index}`,
         type: 'videoNode',
@@ -288,22 +276,22 @@ function NodeEditor({ videos, onScenarioChange, initialScenario }) {
     }
   }, [videos, initialScenario]);
 
-  const onConnect = (params) => {
+  const onConnect = useCallback((params) => {
     setSelectedEdge({
       source: params.source,
       target: params.target
     });
     setDialogOpen(true);
-  };
+  }, []);
 
-  const onEdgeClick = (_, edge) => {
+  const onEdgeClick = useCallback((_, edge) => {
     setSelectedEdge(edge);
     setDialogOpen(true);
-  };
+  }, []);
 
-  const handleDialogConfirm = (data) => {
+  const handleDialogConfirm = useCallback((data) => {
     if (selectedEdge.id) {
-      setEdges(edges.map(edge => 
+      setEdges(edges => edges.map(edge => 
         edge.id === selectedEdge.id
           ? { ...edge, data }
           : edge
@@ -315,11 +303,11 @@ function NodeEditor({ videos, onScenarioChange, initialScenario }) {
         target: selectedEdge.target,
         data
       };
-      setEdges([...edges, newEdge]);
+      setEdges(edges => [...edges, newEdge]);
     }
     setDialogOpen(false);
     setSelectedEdge(null);
-  };
+  }, [selectedEdge]);
 
   useEffect(() => {
     const scenario = {
@@ -338,10 +326,10 @@ function NodeEditor({ videos, onScenarioChange, initialScenario }) {
       }))
     };
     onScenarioChange(scenario);
-  }, [nodes, edges]);
+  }, [nodes, edges, onScenarioChange]);
 
   return (
-    <Box sx={{ width: '100%', height: '100%' }}>
+    <Box sx={{ width: '100%', height: '100%', bgcolor: '#f5f5f5' }}>
       <ReactFlow
         nodes={nodes}
         edges={edges}
@@ -355,6 +343,18 @@ function NodeEditor({ videos, onScenarioChange, initialScenario }) {
         <Background />
         <Controls />
         <MiniMap />
+        <Panel position="top-left" style={{ margin: 10 }}>
+          <Paper sx={{ p: 2 }}>
+            <Typography variant="body2" color="text.secondary">
+              💡 Conseils :
+            </Typography>
+            <Typography variant="body2" color="text.secondary" component="ul" sx={{ mt: 1, pl: 2 }}>
+              <li>Glissez entre deux vidéos pour créer un lien</li>
+              <li>Cliquez sur un lien pour modifier son texte et son style</li>
+              <li>Survolez une vidéo pour la prévisualiser</li>
+            </Typography>
+          </Paper>
+        </Panel>
       </ReactFlow>
 
       <ChoiceDialog

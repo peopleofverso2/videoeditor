@@ -307,11 +307,13 @@ function App() {
 
         <Box sx={{ flexGrow: 1, position: 'relative' }}>
           {showNodeEditor ? (
-            <NodeEditor 
-              videos={videos} 
-              onScenarioChange={handleScenarioChange}
-              initialScenario={scenario}
-            />
+            <Box sx={{ height: '100%', width: '100%', position: 'absolute', inset: 0 }}>
+              <NodeEditor 
+                videos={videos} 
+                onScenarioChange={handleScenarioChange}
+                initialScenario={scenario}
+              />
+            </Box>
           ) : (
             <Box sx={{ p: 3 }}>
               <Typography variant="h5" sx={{ mb: 3 }}>
