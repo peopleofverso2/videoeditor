@@ -1,91 +1,79 @@
-# Éditeur de Vidéos Interactives
+# Éditeur de Vidéos Interactif
 
-Un éditeur de vidéos interactives basé sur un système de cartes et de nœuds, permettant de créer des expériences vidéo non linéaires.
+Un éditeur de vidéos moderne permettant de créer des expériences vidéo interactives avec des choix et des transitions personnalisées.
 
 ## Fonctionnalités
 
-- Interface de graphe pour visualiser et éditer la structure du projet
-- Éditeur de timeline pour chaque scène
-- Support pour les transitions interactives
-- Analyse vidéo assistée par IA
-- Collaboration en temps réel
-- Export en formats multiples (MP4, HTML5)
+### 1. Gestion des Vidéos
+- Upload de vidéos par glisser-déposer
+- Prévisualisation des vidéos au survol
+- Suppression de vidéos
+- Affichage en grille responsive
 
-## Prérequis
+### 2. Transitions entre Vidéos
+- Cut (transition directe)
+- Fade (fondu au noir)
+- Crossfade (fondu enchaîné)
+- Durée des transitions personnalisable
 
-- Node.js >= 16
-- MongoDB
-- FFmpeg
-- npm ou yarn
+### 3. Éditeur de Scénario Interactif
+- Interface visuelle avec nœuds et connexions
+- Prévisualisation des vidéos au survol des nœuds
+- Création de liens entre les vidéos
+- Textes personnalisés pour les choix
+- Disposition automatique en cercle
+- Mini-map pour la navigation
 
-## Installation
+### 4. Lecteur de Scénario
+- Mode plein écran
+- Affichage des choix à la fin de chaque vidéo
+- Navigation interactive dans le scénario
+- Transitions fluides entre les vidéos
 
-1. Cloner le repository :
-```bash
-git clone [url-du-repo]
-cd interactive-video-editor
-```
+## Comment utiliser
 
-2. Installer les dépendances du backend :
-```bash
-cd backend
-npm install
-```
+### Installation
+1. Cloner le repository
+2. Installer les dépendances :
+   ```bash
+   cd frontend && npm install
+   cd ../backend && npm install
+   ```
 
-3. Installer les dépendances du frontend :
-```bash
-cd ../frontend
-npm install
-```
+### Démarrage
+1. Démarrer le backend :
+   ```bash
+   cd backend && npm start
+   ```
+2. Démarrer le frontend :
+   ```bash
+   cd frontend && npm run dev
+   ```
 
-4. Configurer les variables d'environnement :
-```bash
-# Dans le dossier backend
-cp .env.example .env
-# Éditer .env avec vos configurations
-```
+### Créer un Scénario Interactif
+1. Uploader des vidéos en les glissant dans la zone principale
+2. Cliquer sur "Éditeur de scénario"
+3. Créer des liens entre les vidéos :
+   - Cliquer et glisser depuis le point bleu en bas d'une vidéo
+   - Déposer sur le point bleu en haut d'une autre vidéo
+   - Entrer le texte du choix
+4. Tester le scénario avec le bouton "Lire le scénario"
 
-5. Démarrer le serveur de développement :
-```bash
-# Dans le dossier backend
-npm run dev
-
-# Dans le dossier frontend
-npm start
-```
-
-## Structure du Projet
-
-```
-interactive-video-editor/
-├── frontend/
-│   ├── src/
-│   │   ├── components/    # Composants React réutilisables
-│   │   ├── pages/        # Pages de l'application
-│   │   ├── utils/        # Fonctions utilitaires
-│   │   └── services/     # Services API et WebSocket
-│   └── public/           # Assets statiques
-└── backend/
-    ├── src/
-    │   ├── routes/       # Routes API
-    │   ├── controllers/  # Logique métier
-    │   ├── models/       # Modèles MongoDB
-    │   └── services/     # Services (IA, FFmpeg, etc.)
-    └── config/           # Configuration
-```
+### Astuces
+- Survolez une vidéo dans l'éditeur pour la prévisualiser
+- Utilisez la mini-map pour naviguer dans les grands scénarios
+- Les transitions sont personnalisables pour chaque lien
+- Le mode plein écran offre une meilleure expérience de visionnage
 
 ## Technologies Utilisées
+- React + Vite
+- Material-UI
+- ReactFlow pour l'éditeur de nœuds
+- Express.js pour le backend
+- Multer pour la gestion des uploads
 
-- Frontend:
-  - React
-  - React Flow (graphe de nœuds)
-  - Material-UI
-  - Socket.IO Client
+## Version
+Version actuelle : 3.0.0
 
-- Backend:
-  - Node.js
-  - Express
-  - MongoDB
-  - Socket.IO
-  - FFmpeg
-  - Google Cloud Video Intelligence API
+## Licence
+MIT
