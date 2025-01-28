@@ -33,7 +33,6 @@ const VideoNode = ({ data }) => {
         }
       }}
     >
-      {/* Poignée d'entrée (en haut) */}
       <Handle
         type="target"
         position={Position.Top}
@@ -47,7 +46,6 @@ const VideoNode = ({ data }) => {
         }}
       />
 
-      {/* Poignée de sortie (en bas) */}
       <Handle
         type="source"
         position={Position.Bottom}
@@ -63,7 +61,7 @@ const VideoNode = ({ data }) => {
 
       <Box sx={{ position: 'relative' }}>
         <video 
-          src={data.url} 
+          src={data.video} 
           style={{ 
             width: '100%', 
             height: 120, 
@@ -77,30 +75,6 @@ const VideoNode = ({ data }) => {
             e.target.currentTime = 0;
           }}
         />
-        
-        {/* Indicateurs de connexion */}
-        <Box sx={{
-          position: 'absolute',
-          top: -20,
-          left: '50%',
-          transform: 'translateX(-50%)',
-          color: '#666',
-          fontSize: '0.75rem',
-          opacity: 0.7
-        }}>
-          ⬇ Entrée
-        </Box>
-        <Box sx={{
-          position: 'absolute',
-          bottom: -35,
-          left: '50%',
-          transform: 'translateX(-50%)',
-          color: '#666',
-          fontSize: '0.75rem',
-          opacity: 0.7
-        }}>
-          Sortie ⬇
-        </Box>
       </Box>
 
       <Typography 
@@ -128,7 +102,7 @@ const ChoiceDialog = ({ open, onClose, edge, onConfirm }) => {
     color: '#2196f3',
     size: 'medium',
     shape: 'rounded',
-    timing: 0 // 0 = à la fin, nombre négatif = secondes avant la fin
+    timing: 0
   });
 
   const handleConfirm = () => {
@@ -136,6 +110,7 @@ const ChoiceDialog = ({ open, onClose, edge, onConfirm }) => {
       choice,
       buttonStyle
     });
+    onClose();
   };
 
   return (
@@ -240,31 +215,23 @@ const ChoiceDialog = ({ open, onClose, edge, onConfirm }) => {
           </Box>
         </Box>
 
-        <Box sx={{ mb: 3 }}>
-          <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-            Apparition
-          </Typography>
-          <TextField
-            type="number"
-            label="Secondes avant la fin (-5 = 5s avant)"
-            value={buttonStyle.timing}
-            onChange={(e) => setButtonStyle({ 
-              ...buttonStyle, 
-              timing: parseInt(e.target.value) 
-            })}
-            fullWidth
-            size="small"
-          />
-        </Box>
+        <TextField
+          type="number"
+          label="Timing (secondes avant la fin, 0 = à la fin)"
+          value={buttonStyle.timing}
+          onChange={(e) => setButtonStyle({ ...buttonStyle, timing: Number(e.target.value) })}
+          fullWidth
+          sx={{ mb: 3 }}
+        />
 
         <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1 }}>
           <Button onClick={onClose}>
             Annuler
           </Button>
           <Button 
-            variant="contained"
+            variant="contained" 
             onClick={handleConfirm}
-            disabled={!choice.trim()}
+            disabled={!choice}
           >
             Confirmer
           </Button>
@@ -275,161 +242,129 @@ const ChoiceDialog = ({ open, onClose, edge, onConfirm }) => {
 };
 
 function NodeEditor({ videos, onScenarioChange, initialScenario }) {
-  const [nodes, setNodes] = useState([]);
-  const [edges, setEdges] = useState([]);
-  const [choiceDialog, setChoiceDialog] = useState({
-    open: false,
-    edge: null,
-    connection: null
-  });
+  const [nodes, setNodes, onNodesChange] = useNodesState([]);
+  const [edges, setEdges, onEdgesChange] = useEdgesState([]);
+  const [selectedEdge, setSelectedEdge] = useState(null);
+  const [dialogOpen, setDialogOpen] = useState(false);
 
   useEffect(() => {
     if (initialScenario) {
       console.log('Loading initial scenario:', initialScenario);
-      const newNodes = initialScenario.nodes.map((node, index) => ({
+      const newNodes = initialScenario.nodes.map(node => ({
         id: node.id,
         type: 'videoNode',
-        position: { 
-          x: 250 * Math.cos(2 * Math.PI * index / initialScenario.nodes.length),
-          y: 250 * Math.sin(2 * Math.PI * index / initialScenario.nodes.length)
-        },
-        data: { url: node.video }
+        position: node.position || { x: 0, y: 0 },
+        data: { video: node.video, label: node.label }
       }));
 
-      const newEdges = initialScenario.nodes.flatMap(node => 
-        node.choices.map(choice => ({
-          id: `${node.id}-${choice.nextVideo}`,
-          source: node.id,
-          target: choice.nextVideo,
-          label: choice.choice,
-          data: {
-            choice: choice.choice,
-            buttonStyle: choice.buttonStyle
-          },
-          type: 'default',
-          animated: true,
-          style: { stroke: choice.buttonStyle?.color || '#2196f3' }
-        }))
-      );
+      const newEdges = [];
+      initialScenario.nodes.forEach(node => {
+        if (node.choices) {
+          node.choices.forEach(choice => {
+            newEdges.push({
+              id: `${node.id}-${choice.nextVideo}`,
+              source: node.id,
+              target: choice.nextVideo,
+              data: {
+                choice: choice.choice,
+                buttonStyle: choice.buttonStyle
+              }
+            });
+          });
+        }
+      });
 
       setNodes(newNodes);
       setEdges(newEdges);
-    } else {
-      const initialNodes = videos.map((url, index) => ({
+    } else if (videos.length > 0 && nodes.length === 0) {
+      console.log('Creating initial node from videos:', videos);
+      const initialNodes = videos.map((video, index) => ({
         id: `${index}`,
         type: 'videoNode',
-        position: { 
-          x: 250 * Math.cos(2 * Math.PI * index / videos.length),
-          y: 250 * Math.sin(2 * Math.PI * index / videos.length)
-        },
-        data: { url }
+        position: { x: index * 250, y: 0 },
+        data: { video, label: `Video ${index + 1}` }
       }));
       setNodes(initialNodes);
     }
   }, [videos, initialScenario]);
 
-  const onConnect = React.useCallback((params) => {
-    setChoiceDialog({
-      open: true,
-      connection: params,
-      edge: null
+  const onConnect = (params) => {
+    setSelectedEdge({
+      source: params.source,
+      target: params.target
     });
-  }, []);
-
-  const handleChoiceConfirm = (data) => {
-    if (choiceDialog.edge) {
-      setEdges(edges.map(edge => 
-        edge.id === choiceDialog.edge.id 
-          ? { 
-              ...edge, 
-              label: data.choice,
-              data: { 
-                choice: data.choice,
-                buttonStyle: data.buttonStyle 
-              }
-            }
-          : edge
-      ));
-    } else {
-      const edge = {
-        ...choiceDialog.connection,
-        label: data.choice,
-        data: { 
-          choice: data.choice,
-          buttonStyle: data.buttonStyle
-        },
-        type: 'default',
-        animated: true,
-        style: { stroke: data.buttonStyle.color }
-      };
-      setEdges(prev => addEdge(edge, prev));
-    }
-    setChoiceDialog({ open: false, edge: null });
-    
-    const scenario = {
-      nodes: nodes.map(node => ({
-        id: node.id,
-        video: node.data.url,
-        choices: edges
-          .filter(edge => edge.source === node.id)
-          .map(edge => ({
-            choice: edge.data?.choice || edge.label,
-            buttonStyle: edge.data?.buttonStyle,
-            nextVideo: edge.target
-          }))
-      }))
-    };
-    console.log('Updated scenario:', scenario);
-    onScenarioChange(scenario);
+    setDialogOpen(true);
   };
 
   const onEdgeClick = (_, edge) => {
-    setChoiceDialog({
-      open: true,
-      edge,
-      connection: null
-    });
+    setSelectedEdge(edge);
+    setDialogOpen(true);
   };
 
+  const handleDialogConfirm = (data) => {
+    if (selectedEdge.id) {
+      setEdges(edges.map(edge => 
+        edge.id === selectedEdge.id
+          ? { ...edge, data }
+          : edge
+      ));
+    } else {
+      const newEdge = {
+        id: `${selectedEdge.source}-${selectedEdge.target}`,
+        source: selectedEdge.source,
+        target: selectedEdge.target,
+        data
+      };
+      setEdges([...edges, newEdge]);
+    }
+    setDialogOpen(false);
+    setSelectedEdge(null);
+  };
+
+  useEffect(() => {
+    const scenario = {
+      nodes: nodes.map(node => ({
+        id: node.id,
+        video: node.data.video,
+        label: node.data.label,
+        position: node.position,
+        choices: edges
+          .filter(edge => edge.source === node.id)
+          .map(edge => ({
+            nextVideo: edge.target,
+            choice: edge.data.choice,
+            buttonStyle: edge.data.buttonStyle
+          }))
+      }))
+    };
+    onScenarioChange(scenario);
+  }, [nodes, edges]);
+
   return (
-    <Box sx={{ width: '100%', height: '100%', bgcolor: '#f5f5f5' }}>
+    <Box sx={{ width: '100%', height: '100%' }}>
       <ReactFlow
         nodes={nodes}
         edges={edges}
-        onNodesChange={(changes) => setNodes(changes)}
-        onEdgesChange={(changes) => setEdges(changes)}
+        onNodesChange={onNodesChange}
+        onEdgesChange={onEdgesChange}
         onConnect={onConnect}
         onEdgeClick={onEdgeClick}
         nodeTypes={nodeTypes}
-        defaultEdgeOptions={{
-          style: { strokeWidth: 2 },
-          type: 'default'
-        }}
         fitView
       >
-        <Panel position="top-left" style={{ margin: 10 }}>
-          <Paper sx={{ p: 2 }}>
-            <Typography variant="body2" color="text.secondary">
-              💡 Conseils :
-            </Typography>
-            <Typography variant="body2" color="text.secondary" component="ul" sx={{ mt: 1, pl: 2 }}>
-              <li>Glissez entre deux vidéos pour créer un lien</li>
-              <li>Cliquez sur un lien pour modifier son texte et son style</li>
-              <li>Survolez une vidéo pour la prévisualiser</li>
-              <li>Personnalisez l'apparence des boutons de choix</li>
-            </Typography>
-          </Paper>
-        </Panel>
         <Background />
         <Controls />
         <MiniMap />
       </ReactFlow>
 
-      <ChoiceDialog 
-        open={choiceDialog.open}
-        edge={choiceDialog.edge}
-        onClose={() => setChoiceDialog({ open: false, edge: null })}
-        onConfirm={handleChoiceConfirm}
+      <ChoiceDialog
+        open={dialogOpen}
+        onClose={() => {
+          setDialogOpen(false);
+          setSelectedEdge(null);
+        }}
+        edge={selectedEdge}
+        onConfirm={handleDialogConfirm}
       />
     </Box>
   );
